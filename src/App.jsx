@@ -1,0 +1,100 @@
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import DashboardLayout from "./layouts/DashboardLayout";
+
+// Pages
+import Login from "./pages/Login";
+import StudentDashboard from "./pages/student/StudentDashboard";
+import TpoDashboard from "./pages/tpo/TpoDashboard";
+import RecruiterDashboard from "./pages/recruiter/RecruiterDashboard";
+
+// Dummy dashboard pages to verify the layout works
+const DummyDashboard = ({ title }) => (
+  <div className="flex flex-col gap-4">
+    <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+      <p className="text-gray-600">This module is under construction.</p>
+    </div>
+  </div>
+);
+
+// Sidebar Navigation Maps
+import { LayoutDashboard, Users, Briefcase, FileText, Settings } from "lucide-react";
+
+export const STUDENT_NAV = [
+  { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
+  { name: "My Profile", href: "/student/profile", icon: Users },
+  { name: "Job Board", href: "/student/jobs", icon: Briefcase },
+  { name: "Applications", href: "/student/applications", icon: FileText },
+];
+
+export const RECRUITER_NAV = [
+  { name: "Dashboard", href: "/recruiter/dashboard", icon: LayoutDashboard },
+  { name: "Post Job", href: "/recruiter/post-job", icon: Briefcase },
+  { name: "Applicants", href: "/recruiter/applicants", icon: Users },
+];
+
+export const TPO_NAV = [
+  { name: "Dashboard", href: "/tpo/dashboard", icon: LayoutDashboard },
+  { name: "Students", href: "/tpo/students", icon: Users },
+  { name: "Companies", href: "/tpo/companies", icon: Briefcase },
+  { name: "Job Approvals", href: "/tpo/jobs", icon: FileText },
+  { name: "Settings", href: "/tpo/settings", icon: Settings },
+];
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+
+          {/* Student Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["STUDENT"]} />}>
+            <Route element={<DashboardLayout navigationItems={STUDENT_NAV} />}>
+              <Route path="/student/dashboard" element={<StudentDashboard />} />
+              <Route path="/student/profile" element={<DummyDashboard title="My Profile" />} />
+              <Route path="/student/jobs" element={<DummyDashboard title="Job Board" />} />
+              <Route path="/student/applications" element={<DummyDashboard title="My Applications" />} />
+            </Route>
+          </Route>
+
+          {/* Recruiter Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["RECRUITER"]} />}>
+            <Route element={<DashboardLayout navigationItems={RECRUITER_NAV} />}>
+              <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+              <Route path="/recruiter/post-job" element={<DummyDashboard title="Post a New Job" />} />
+              <Route path="/recruiter/applicants" element={<DummyDashboard title="Manage Applicants" />} />
+            </Route>
+          </Route>
+
+          {/* TPO Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["PLACEMENT_OFFICER"]} />}>
+            <Route element={<DashboardLayout navigationItems={TPO_NAV} />}>
+              <Route path="/tpo/dashboard" element={<TpoDashboard />} />
+              <Route path="/tpo/students" element={<DummyDashboard title="Student Management" />} />
+              <Route path="/tpo/companies" element={<DummyDashboard title="Company Management" />} />
+              <Route path="/tpo/jobs" element={<DummyDashboard title="Job Approvals" />} />
+              <Route path="/tpo/settings" element={<DummyDashboard title="System Settings" />} />
+            </Route>
+          </Route>
+          
+          {/* Fallback Unauthorized Route */}
+          <Route path="/unauthorized" element={
+            <div className="flex h-screen items-center justify-center bg-gray-50 flex-col gap-4">
+              <h1 className="text-4xl font-bold text-gray-900">403</h1>
+              <p className="text-gray-600">You do not have permission to view this page.</p>
+              <a href="/" className="text-indigo-600 hover:text-indigo-800 underline">Return to safety</a>
+            </div>
+          } />
+
+          {/* Catch all 404 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}

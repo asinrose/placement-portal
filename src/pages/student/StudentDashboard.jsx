@@ -1,0 +1,145 @@
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/Card";
+import { Briefcase, Building2, CheckCircle, Clock, TrendingUp, Calendar, ArrowRight, ChevronRight, Star } from "lucide-react";
+
+export default function StudentDashboard() {
+  const stats = [
+    { title: "Active Applications", value: "3", icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
+    { title: "Interviews Scheduled", value: "1", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50" },
+    { title: "Saved Jobs", value: "12", icon: Star, color: "text-indigo-500", bg: "bg-indigo-50" },
+    { title: "Companies Visited", value: "45", icon: Building2, color: "text-blue-500", bg: "bg-blue-50" },
+  ];
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 mt-1">Welcome back, Alice! Here's an overview of your placement journey.</p>
+        </div>
+        <button className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 gap-2">
+          <Briefcase className="w-4 h-4" />
+          Browse New Jobs
+        </button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.title} className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-indigo-100 transition-all">
+              <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 opacity-50 group-hover:scale-150 transition-transform duration-700" />
+              <div className="relative flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">{stat.title}</p>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <p className="text-3xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{stat.value}</p>
+                  </div>
+                </div>
+                <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Main Content Area */}
+        <div className="xl:col-span-2 space-y-8">
+          <Card className="border-gray-100 shadow-sm overflow-hidden">
+            <CardHeader className="border-b border-gray-100 bg-gray-50/50 py-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-indigo-500" />
+                  Recent Applications
+                </CardTitle>
+                <button className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
+                  View all <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ul className="divide-y divide-gray-100">
+                {[
+                  { company: "TechCorp Global", role: "Software Engineer Intern", status: "In Review", statusColor: "bg-amber-100 text-amber-700", date: "2 days ago", logo: "T" },
+                  { company: "DataSync Inc", role: "Data Analyst", status: "Interview", statusColor: "bg-emerald-100 text-emerald-700", date: "5 days ago", logo: "D" },
+                  { company: "CloudNet Systems", role: "DevOps Engineer", status: "Applied", statusColor: "bg-blue-100 text-blue-700", date: "1 week ago", logo: "C" }
+                ].map((app, idx) => (
+                  <li key={idx} className="p-5 sm:px-6 hover:bg-gray-50 transition-colors group cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-sm group-hover:shadow-md transition-shadow">
+                          {app.logo}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{app.role}</p>
+                          <p className="text-sm text-gray-500 flex items-center gap-2 mt-0.5">
+                            <Building2 className="w-3.5 h-3.5" />
+                            {app.company}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${app.statusColor}`}>
+                          {app.status}
+                        </span>
+                        <p className="text-xs text-gray-400 font-medium">{app.date}</p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar Announcements */}
+        <div className="space-y-8">
+          <Card className="border-gray-100 shadow-sm overflow-hidden bg-gradient-to-b from-white to-gray-50/50">
+            <CardHeader className="border-b border-gray-100 bg-white">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-indigo-500" />
+                Upcoming Events
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5">
+              <div className="space-y-5">
+                 {[
+                  { title: "Innovate Ltd Pre-Placement Talk", date: "Tomorrow, 10:00 AM", type: "Event", icon: Building2 },
+                  { title: "Mock Interview Session", date: "Closes in 2 days", type: "Deadline", icon: Clock },
+                  { title: "Resume Building Workshop", date: "Friday, 4:00 PM", type: "Workshop", icon: Briefcase }
+                 ].map((ann, idx) => {
+                   const Icon = ann.icon;
+                   return (
+                     <div key={idx} className="flex gap-4 group cursor-pointer">
+                       <div className="flex-shrink-0 mt-1">
+                         <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                           <Icon className="w-4 h-4" />
+                         </div>
+                       </div>
+                       <div>
+                         <p className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{ann.title}</p>
+                         <div className="flex items-center gap-2 mt-1">
+                           <span className="text-xs font-medium text-gray-500">{ann.date}</span>
+                           <span className="w-1 h-1 rounded-full bg-gray-300" />
+                           <span className="text-xs font-medium text-indigo-600">{ann.type}</span>
+                         </div>
+                       </div>
+                     </div>
+                   );
+                 })}
+              </div>
+              <button className="mt-6 w-full py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors flex items-center justify-center gap-1.5 group">
+                View Calendar <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
