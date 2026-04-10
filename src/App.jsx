@@ -8,7 +8,15 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/Login";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import TpoDashboard from "./pages/tpo/TpoDashboard";
+import JobApprovals from "./pages/tpo/JobApprovals";
+import StudentManagement from "./pages/tpo/StudentManagement";
+import CompanyManagement from "./pages/tpo/CompanyManagement";
 import RecruiterDashboard from "./pages/recruiter/RecruiterDashboard";
+import PostJob from "./pages/recruiter/PostJob";
+import ManageApplicants from "./pages/recruiter/ManageApplicants";
+import AlumniDashboard from "./pages/alumni/AlumniDashboard";
+import JobReferrals from "./pages/alumni/JobReferrals";
+import MockInterviews from "./pages/alumni/MockInterviews";
 
 // Dummy dashboard pages to verify the layout works
 const DummyDashboard = ({ title }) => (
@@ -21,7 +29,14 @@ const DummyDashboard = ({ title }) => (
 );
 
 // Sidebar Navigation Maps
-import { LayoutDashboard, Users, Briefcase, FileText, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, FileText, Settings, MessageSquare, Video } from "lucide-react";
+
+export const ALUMNI_NAV = [
+  { name: "Dashboard", href: "/alumni/dashboard", icon: LayoutDashboard },
+  { name: "Interviews", href: "/alumni/interviews", icon: Video },
+  { name: "Referrals", href: "/alumni/referrals", icon: Briefcase },
+  { name: "Community", href: "/alumni/community", icon: MessageSquare },
+];
 
 export const STUDENT_NAV = [
   { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
@@ -66,8 +81,8 @@ export default function App() {
           <Route element={<ProtectedRoute allowedRoles={["RECRUITER"]} />}>
             <Route element={<DashboardLayout navigationItems={RECRUITER_NAV} />}>
               <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
-              <Route path="/recruiter/post-job" element={<DummyDashboard title="Post a New Job" />} />
-              <Route path="/recruiter/applicants" element={<DummyDashboard title="Manage Applicants" />} />
+              <Route path="/recruiter/post-job" element={<PostJob />} />
+              <Route path="/recruiter/applicants" element={<ManageApplicants />} />
             </Route>
           </Route>
 
@@ -75,10 +90,20 @@ export default function App() {
           <Route element={<ProtectedRoute allowedRoles={["PLACEMENT_OFFICER"]} />}>
             <Route element={<DashboardLayout navigationItems={TPO_NAV} />}>
               <Route path="/tpo/dashboard" element={<TpoDashboard />} />
-              <Route path="/tpo/students" element={<DummyDashboard title="Student Management" />} />
-              <Route path="/tpo/companies" element={<DummyDashboard title="Company Management" />} />
-              <Route path="/tpo/jobs" element={<DummyDashboard title="Job Approvals" />} />
+              <Route path="/tpo/students" element={<StudentManagement />} />
+              <Route path="/tpo/companies" element={<CompanyManagement />} />
+              <Route path="/tpo/jobs" element={<JobApprovals />} />
               <Route path="/tpo/settings" element={<DummyDashboard title="System Settings" />} />
+            </Route>
+          </Route>
+
+          {/* Alumni Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["ALUMNI"]} />}>
+            <Route element={<DashboardLayout navigationItems={ALUMNI_NAV} />}>
+              <Route path="/alumni/dashboard" element={<AlumniDashboard />} />
+              <Route path="/alumni/interviews" element={<MockInterviews />} />
+              <Route path="/alumni/referrals" element={<JobReferrals />} />
+              <Route path="/alumni/community" element={<DummyDashboard title="Community & Forum" />} />
             </Route>
           </Route>
           
