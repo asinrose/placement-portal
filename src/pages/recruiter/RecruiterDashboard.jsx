@@ -6,10 +6,10 @@ import { Link } from "react-router-dom";
 
 export default function RecruiterDashboard() {
   const stats = [
-    { title: "Active Jobs", value: "4", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-50", border: "hover:border-indigo-200" },
-    { title: "New Applicants", value: "87", icon: Users, color: "text-blue-500", bg: "bg-blue-50", border: "hover:border-blue-200" },
-    { title: "Interviews Today", value: "6", icon: Clock, color: "text-amber-500", bg: "bg-amber-50", border: "hover:border-amber-200" },
-    { title: "Offers Extended", value: "12", icon: Send, color: "text-emerald-500", bg: "bg-emerald-50", border: "hover:border-emerald-200" },
+    { title: "Active Jobs", value: "0", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-50", border: "hover:border-indigo-200" },
+    { title: "New Applicants", value: "0", icon: Users, color: "text-blue-500", bg: "bg-blue-50", border: "hover:border-blue-200" },
+    { title: "Interviews Today", value: "0", icon: Clock, color: "text-amber-500", bg: "bg-amber-50", border: "hover:border-amber-200" },
+    { title: "Offers Extended", value: "0", icon: Send, color: "text-emerald-500", bg: "bg-emerald-50", border: "hover:border-emerald-200" },
   ];
 
   return (
@@ -62,11 +62,7 @@ export default function RecruiterDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <div className="flex flex-col">
-                 {[
-                   { title: "Full Stack Developer", type: "Full Time", applicants: 45, shortlsited: 12, date: "3 days ago" },
-                   { title: "UX Designer", type: "Full Time", applicants: 28, shortlsited: 5, date: "1 week ago" },
-                   { title: "Marketing Intern", type: "Internship", applicants: 89, shortlsited: 20, date: "2 weeks ago" },
-                 ].map((job, idx) => (
+                 {[].map((job, idx) => (
                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 lg:px-6 border-b border-gray-50 hover:bg-gray-50/80 transition-colors group">
                      <div className="mb-4 sm:mb-0">
                        <h3 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{job.title}</h3>
@@ -107,12 +103,7 @@ export default function RecruiterDashboard() {
                {/* Vertical connection line */}
                <div className="absolute left-[calc(1.5rem+3.5rem)] top-10 bottom-10 w-0.5 bg-gray-100 z-0 hidden sm:block"></div>
                
-               {[
-                 { label: "Total Applications", value: 162, sub: "100%", color: "blue" },
-                 { label: "Shortlisted", value: 45, sub: "27.7%", color: "indigo" },
-                 { label: "Interviews", value: 18, sub: "11.1%", color: "amber" },
-                 { label: "Offers Extended", value: 12, sub: "7.4%", color: "emerald" }
-               ].map((step, idx) => (
+               {[].map((step, idx) => (
                  <div key={idx} className="relative z-10 flex items-center gap-4 group">
                     <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center shadow-sm shrink-0 transition-transform group-hover:scale-105 bg-${step.color}-100 text-${step.color}-700 border border-${step.color}-200`}>
                        <span className="font-bold text-lg leading-none">{step.value}</span>

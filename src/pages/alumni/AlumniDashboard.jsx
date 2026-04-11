@@ -6,10 +6,10 @@ import { Link } from "react-router-dom";
 
 export default function AlumniDashboard() {
   const stats = [
-    { title: "Active Referrals", value: "3", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-50", border: "hover:border-indigo-200" },
-    { title: "Students Mentored", value: "14", icon: Users, color: "text-blue-500", bg: "bg-blue-50", border: "hover:border-blue-200" },
-    { title: "Upcoming Interviews", value: "2", icon: Video, color: "text-amber-500", bg: "bg-amber-50", border: "hover:border-amber-200" },
-    { title: "Community Rank", value: "Gold", icon: Award, color: "text-emerald-500", bg: "bg-emerald-50", border: "hover:border-emerald-200" },
+    { title: "Active Referrals", value: "0", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-50", border: "hover:border-indigo-200" },
+    { title: "Students Mentored", value: "0", icon: Users, color: "text-blue-500", bg: "bg-blue-50", border: "hover:border-blue-200" },
+    { title: "Upcoming Interviews", value: "0", icon: Video, color: "text-amber-500", bg: "bg-amber-50", border: "hover:border-amber-200" },
+    { title: "Community Rank", value: "Unranked", icon: Award, color: "text-emerald-500", bg: "bg-emerald-50", border: "hover:border-emerald-200" },
   ];
 
   return (
@@ -70,11 +70,7 @@ export default function AlumniDashboard() {
             </CardHeader>
             <CardContent className="p-0">
                <div className="flex flex-col divide-y divide-gray-50">
-                 {[
-                   { id: 1, author: "Rahul M.", role: "Student - CS", question: "How should I prepare for the system design round at Google for a fresh grad role?", likes: 24, comments: 5, time: "2 hours ago" },
-                   { id: 2, author: "Priya S.", role: "Student - IT", question: "Is it better to focus on LeetCode or open source contributions during pre-final year?", likes: 45, comments: 12, time: "5 hours ago" },
-                   { id: 3, author: "Aman Gupta", role: "Student - ECE", question: "Looking for resume review logic. Does anyone have a template that cleared FAANG?", likes: 89, comments: 34, time: "1 day ago" }
-                 ].map((post) => (
+                 {[].map((post) => (
                     <div key={post.id} className="p-6 hover:bg-gray-50/50 transition-colors group cursor-pointer">
                        <div className="flex gap-4">
                           <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0 border border-indigo-200">
@@ -133,11 +129,7 @@ export default function AlumniDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                  <div className="divide-y divide-gray-50">
-                   {[
-                     { name: "John Davis", company: "Meta", score: 1240 },
-                     { name: "Sarah Lin", company: "Google", score: 980 },
-                     { name: "Mike Chen", company: "Amazon", score: 850 }
-                   ].map((alum, idx) => (
+                   {[].map((alum, idx) => (
                      <div key={idx} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer">
                         <div className="flex items-center gap-3">
                            <div className="text-base font-bold text-gray-400 w-4 text-center">#{idx + 1}</div>

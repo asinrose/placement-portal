@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
-import { Briefcase, Mail, Lock, Sparkles, LogIn, ArrowRight } from "lucide-react";
+import { Briefcase, Mail, Lock, Sparkles, LogIn, ArrowRight, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -11,6 +11,10 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const [requirePasswordChange, setRequirePasswordChange] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -32,21 +36,33 @@ export default function Login() {
         return;
       }
 
-      // Hardcoded demo accounts
-      let user = null;
-      if (email === "student@demo.com" && password === "demo123") {
-        user = { id: 1, name: "Alice Student", email, role: "STUDENT" };
-      } else if (email === "tpo@demo.com" && password === "demo123") {
-        user = { id: 2, name: "Bob Officer", email, role: "PLACEMENT_OFFICER" };
-      } else if (email === "recruiter@demo.com" && password === "demo123") {
-        user = { id: 3, name: "ACME Corp", email, role: "RECRUITER" };
-      } else if (email === "admin@demo.com" && password === "demo123") {
-        user = { id: 4, name: "System Admin", email, role: "ADMIN" };
-      } else if (email === "alumni@demo.com" && password === "demo123") {
-        user = { id: 5, name: "Charlie Alum", email, role: "ALUMNI" };
+      // Check mocked local storage database first
+      const activeUsers = JSON.parse(localStorage.getItem("nexus_active_users") || "[]");
+      let user = activeUsers.find(u => (u.email === email || u.registerNumber === email) && u.password === password);
+
+      // If not found, check hardcoded demo accounts
+      if (!user) {
+        if (email === "tpo@demo.com" && password === "demo123") {
+          user = { id: 2, name: "Bob Officer", email, role: "PLACEMENT_OFFICER" };
+        } else if (email === "admin@demo.com" && password === "demo123") {
+          user = { id: 4, name: "System Admin", email, role: "ADMIN" };
+        }
       }
 
       if (user) {
+        if (user.status === "Suspended") {
+          setError("Your account has been suspended by an administrator.");
+          setIsLoading(false);
+          return;
+        }
+
+        if (user.mustChangePassword) {
+           setError("");
+           setRequirePasswordChange(user);
+           setIsLoading(false);
+           return;
+        }
+
         login(user);
         switch (user.role) {
           case "STUDENT": navigate("/student/dashboard"); break;
@@ -57,10 +73,41 @@ export default function Login() {
           default: navigate("/");
         }
       } else {
-        setError("Invalid email or password.");
+        setError("Invalid credentials.");
         setIsLoading(false);
       }
     }, 800);
+  };
+
+  const handlePasswordReset = (e) => {
+     e.preventDefault();
+     if (newPassword.length < 6) {
+        setError("Password must be at least 6 characters."); return;
+     }
+     if (newPassword !== confirmPassword) {
+        setError("Passwords do not match."); return;
+     }
+
+     setIsLoading(true);
+     setTimeout(() => {
+        const activeUsers = JSON.parse(localStorage.getItem("nexus_active_users") || "[]");
+        const updatedUsers = activeUsers.map(u => 
+           u.id === requirePasswordChange.id ? { ...u, password: newPassword, mustChangePassword: false } : u
+        );
+        localStorage.setItem("nexus_active_users", JSON.stringify(updatedUsers));
+
+        const completeUser = { ...requirePasswordChange, password: newPassword, mustChangePassword: false };
+        login(completeUser);
+        
+        switch (completeUser.role) {
+          case "STUDENT": navigate("/student/dashboard"); break;
+          case "PLACEMENT_OFFICER": navigate("/tpo/dashboard"); break;
+          case "RECRUITER": navigate("/recruiter/dashboard"); break;
+          case "ADMIN": navigate("/admin/dashboard"); break;
+          case "ALUMNI": navigate("/alumni/dashboard"); break;
+          default: navigate("/");
+        }
+     }, 1000);
   };
 
   const handleDemoClick = (demoEmail) => {
@@ -132,6 +179,52 @@ export default function Login() {
               <span className="text-2xl font-bold text-white tracking-wide">Nexus</span>
             </div>
 
+            {requirePasswordChange ? (
+              <>
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Security Update</h2>
+                  <p className="text-indigo-200/70">For security reasons, please change your default password to continue.</p>
+                </div>
+                <form onSubmit={handlePasswordReset} className="space-y-5">
+                  {error && (
+                    <div className="animate-in fade-in p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
+                  <div className="space-y-4">
+                    <div className="group">
+                      <label className="block text-sm font-medium text-indigo-100 mb-1.5">New Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        className="block w-full px-3 py-2.5 border border-white/10 rounded-xl bg-[#0f172a]/50 text-white placeholder-indigo-200/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 backdrop-blur-md"
+                      />
+                    </div>
+                    <div className="group">
+                      <label className="block text-sm font-medium text-indigo-100 mb-1.5">Confirm New Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        className="block w-full px-3 py-2.5 border border-white/10 rounded-xl bg-[#0f172a]/50 text-white placeholder-indigo-200/30 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 backdrop-blur-md"
+                      />
+                    </div>
+                  </div>
+                  <button 
+                    type="submit" disabled={isLoading}
+                    className="w-full mt-8 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all"
+                  >
+                    {isLoading ? "Updating..." : "Set Password & Continue"}
+                  </button>
+                </form>
+              </>
+            ) : (
+            <>
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Welcome Back</h2>
               <p className="text-indigo-200/70">Please enter your details to sign in.</p>
@@ -147,14 +240,14 @@ export default function Login() {
               
               <div className="space-y-4">
                 <div className="group">
-                  <label className="block text-sm font-medium text-indigo-100 mb-1.5">Email Address</label>
+                  <label className="block text-sm font-medium text-indigo-100 mb-1.5">Email or Register Number</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-indigo-300/50 group-focus-within:text-indigo-400 transition-colors" />
+                      <User className="h-5 w-5 text-indigo-300/50 group-focus-within:text-indigo-400 transition-colors" />
                     </div>
                     <input
-                      type="email"
-                      placeholder="you@example.com"
+                      type="text"
+                      placeholder="you@example.com or REG123"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -205,11 +298,16 @@ export default function Login() {
                 )}
               </button>
             </form>
+            <div className="text-center mt-6">
+              <p className="text-sm text-indigo-200/60">
+                Don't have an account? <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors ml-1">Sign up</Link>
+              </p>
+            </div>
 
             <div className="mt-10 pt-6 border-t border-white/10">
               <p className="text-sm font-medium text-indigo-200/60 mb-3 text-center">Fast Login (Demo)</p>
               <div className="flex flex-wrap justify-center gap-2">
-                {['student', 'tpo', 'recruiter', 'admin'].map((role) => (
+                {['tpo', 'admin'].map((role) => (
                    <button
                      key={role}
                      onClick={() => handleDemoClick(`${role}@demo.com`)}
@@ -220,6 +318,8 @@ export default function Login() {
                 ))}
               </div>
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>

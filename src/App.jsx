@@ -6,6 +6,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 
 // Pages
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import TpoDashboard from "./pages/tpo/TpoDashboard";
 import JobApprovals from "./pages/tpo/JobApprovals";
@@ -17,6 +18,9 @@ import ManageApplicants from "./pages/recruiter/ManageApplicants";
 import AlumniDashboard from "./pages/alumni/AlumniDashboard";
 import JobReferrals from "./pages/alumni/JobReferrals";
 import MockInterviews from "./pages/alumni/MockInterviews";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import AdminStudentManagement from "./pages/admin/AdminStudentManagement";
 
 // Dummy dashboard pages to verify the layout works
 const DummyDashboard = ({ title }) => (
@@ -29,7 +33,14 @@ const DummyDashboard = ({ title }) => (
 );
 
 // Sidebar Navigation Maps
-import { LayoutDashboard, Users, Briefcase, FileText, Settings, MessageSquare, Video } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, FileText, Settings, MessageSquare, Video, Shield, GraduationCap } from "lucide-react";
+
+export const ADMIN_NAV = [
+  { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { name: "User Management", href: "/admin/users", icon: Users },
+  { name: "Student Accounts", href: "/admin/students", icon: GraduationCap },
+  { name: "System Settings", href: "/admin/settings", icon: Settings },
+];
 
 export const ALUMNI_NAV = [
   { name: "Dashboard", href: "/alumni/dashboard", icon: LayoutDashboard },
@@ -66,6 +77,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Student Routes */}
           <Route element={<ProtectedRoute allowedRoles={["STUDENT"]} />}>
@@ -104,6 +116,16 @@ export default function App() {
               <Route path="/alumni/interviews" element={<MockInterviews />} />
               <Route path="/alumni/referrals" element={<JobReferrals />} />
               <Route path="/alumni/community" element={<DummyDashboard title="Community & Forum" />} />
+            </Route>
+          </Route>
+
+          {/* Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+            <Route element={<DashboardLayout navigationItems={ADMIN_NAV} />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/students" element={<AdminStudentManagement />} />
+              <Route path="/admin/settings" element={<DummyDashboard title="System Settings" />} />
             </Route>
           </Route>
           

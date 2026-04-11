@@ -5,19 +5,13 @@ import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
 
 export default function StudentManagement() {
-  const [students, setStudents] = useState([
-    { id: "STU001", name: "Alice Johnson", branch: "Computer Science", cgpa: "8.9", email: "alice.j@university.edu", status: "Verified" },
-    { id: "STU002", name: "Ravi Kumar", branch: "Information Tech", cgpa: "7.5", email: "ravi.k@university.edu", status: "Unverified" },
-    { id: "STU003", name: "Sarah Smith", branch: "Electronics", cgpa: "9.2", email: "sarah.s@university.edu", status: "Verified" },
-    { id: "STU004", name: "Michael Chang", branch: "Mechanical", cgpa: "8.1", email: "michael.c@university.edu", status: "Flagged" },
-    { id: "STU005", name: "Priya Sharma", branch: "Computer Science", cgpa: "8.6", email: "priya.s@university.edu", status: "Unverified" },
-  ]);
+  const [students, setStudents] = useState([]);
 
   const stats = [
-    { label: "Total Registered", value: "850" },
-    { label: "Verified Profiles", value: "720" },
-    { label: "Pending Verification", value: "125" },
-    { label: "Flagged Accounts", value: "5" },
+    { label: "Total Registered", value: "0" },
+    { label: "Verified Profiles", value: "0" },
+    { label: "Pending Verification", value: "0" },
+    { label: "Flagged Accounts", value: "0" },
   ];
 
   const handleVerify = (id) => {

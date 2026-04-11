@@ -5,19 +5,13 @@ import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
 
 export default function CompanyManagement() {
-  const [companies, setCompanies] = useState([
-    { id: "C001", name: "TechCorp Global", industry: "Software & Technology", location: "Bangalore", jobs: 3, hires: 45, email: "careers@techcorp.com" },
-    { id: "C002", name: "DataSync Inc", industry: "Analytics", location: "Hyderabad", jobs: 1, hires: 12, email: "hr@datasync.com" },
-    { id: "C003", name: "CloudNet Systems", industry: "Cloud Computing", location: "Pune", jobs: 2, hires: 28, email: "talent@cloudnet.io" },
-    { id: "C004", name: "Acme Corp", industry: "Manufacturing", location: "Mumbai", jobs: 1, hires: 5, email: "recruitment@acmecorp.in" },
-    { id: "C005", name: "FinTech Solutions", industry: "Finance", location: "Gurgaon", jobs: 0, hires: 32, email: "hr@fintech.com" },
-  ]);
+  const [companies, setCompanies] = useState([]);
 
   const stats = [
-    { label: "Partnered Companies", value: "124" },
-    { label: "Active Hiring Drives", value: "8" },
-    { label: "Total Students Placed", value: "412" },
-    { label: "Average CTC", value: "8.5 LPA" },
+    { label: "Partnered Companies", value: "0" },
+    { label: "Active Hiring Drives", value: "0" },
+    { label: "Total Students Placed", value: "0" },
+    { label: "Average CTC", value: "0 LPA" },
   ];
 
   return (

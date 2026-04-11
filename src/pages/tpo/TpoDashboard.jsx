@@ -6,18 +6,13 @@ import { Link } from "react-router-dom";
 
 export default function TpoDashboard() {
   const stats = [
-    { title: "Total Students", value: "850", icon: Users, color: "text-blue-500", bg: "bg-blue-50", border: "hover:border-blue-200" },
-    { title: "Total Companies", value: "124", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-50", border: "hover:border-indigo-200" },
-    { title: "Pending Approvals", value: "12", icon: FileText, color: "text-amber-500", bg: "bg-amber-50", border: "hover:border-amber-200" },
-    { title: "Placed Students", value: "412", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50", border: "hover:border-emerald-200" },
+    { title: "Total Students", value: "0", icon: Users, color: "text-blue-500", bg: "bg-blue-50", border: "hover:border-blue-200" },
+    { title: "Total Companies", value: "0", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-50", border: "hover:border-indigo-200" },
+    { title: "Pending Approvals", value: "0", icon: FileText, color: "text-amber-500", bg: "bg-amber-50", border: "hover:border-amber-200" },
+    { title: "Placed Students", value: "0", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50", border: "hover:border-emerald-200" },
   ];
 
-  const [jobs, setJobs] = useState([
-    { id: 1, company: "TechCorp Global", role: "Software Developer", ctc: "12 LPA", status: "Pending" },
-    { id: 2, company: "DataSync Inc", role: "Data Scientist", ctc: "15 LPA", status: "Pending" },
-    { id: 3, company: "CloudNet Systems", role: "DevOps Engineer", ctc: "10 LPA", status: "Pending" },
-    { id: 4, company: "Acme Corp", role: "Frontend Developer", ctc: "8 LPA", status: "Pending" },
-  ]);
+  const [jobs, setJobs] = useState([]);
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -39,12 +34,7 @@ export default function TpoDashboard() {
     setRejectModalOpen(false);
   };
 
-  const activities = [
-    { id: 1, icon: Users, title: "45 new students registered", time: "2 hours ago", color: "text-blue-500", bg: "bg-blue-50" },
-    { id: 2, icon: CheckCircle, title: "TechCorp finalized 12 hires", time: "5 hours ago", color: "text-emerald-500", bg: "bg-emerald-50" },
-    { id: 3, icon: Briefcase, title: "New company registration: DataSync", time: "1 day ago", color: "text-purple-500", bg: "bg-purple-50" },
-    { id: 4, icon: Calendar, title: "Pre-placement talk scheduled by Acme", time: "2 days ago", color: "text-amber-500", bg: "bg-amber-50" },
-  ];
+  const activities = [];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

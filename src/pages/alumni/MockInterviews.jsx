@@ -4,12 +4,7 @@ import { Clock, Calendar, CheckCircle, Video, Plus, User, Trash2 } from "lucide-
 import { Button } from "../../components/Button";
 
 export default function MockInterviews() {
-  const [slots, setSlots] = useState([
-    { id: 1, date: "2024-05-12", time: "10:00 AM", duration: "45 mins", bookedBy: null, topic: "System Design" },
-    { id: 2, date: "2024-05-14", time: "02:00 PM", duration: "45 mins", bookedBy: { name: "Alice Johnson", email: "alice.j@university.edu" }, topic: "Data Structures & Algorithms" },
-    { id: 3, date: "2024-05-15", time: "11:00 AM", duration: "60 mins", bookedBy: null, topic: "Behavioral / HR" },
-    { id: 4, date: "2024-05-18", time: "05:00 PM", duration: "30 mins", bookedBy: { name: "Ravi Kumar", email: "ravi.k@university.edu" }, topic: "React.js Frontend" },
-  ]);
+  const [slots, setSlots] = useState([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newSlot, setNewSlot] = useState({ date: "", time: "", duration: "45 mins", topic: "" });

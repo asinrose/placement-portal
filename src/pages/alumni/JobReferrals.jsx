@@ -5,10 +5,7 @@ import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 
 export default function JobReferrals() {
-  const [referrals, setReferrals] = useState([
-    { id: 1, company: "Google", role: "L3 Software Engineer", url: "careers.google.com/...", date: "2 days ago", clicks: 45, applicants: 12 },
-    { id: 2, company: "Stripe", role: "Frontend Developer", url: "stripe.com/jobs/...", date: "1 week ago", clicks: 128, applicants: 34 },
-  ]);
+  const [referrals, setReferrals] = useState([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newReferral, setNewReferral] = useState({ company: "", role: "", url: "" });
@@ -86,11 +83,11 @@ export default function JobReferrals() {
              <CardContent className="p-6 space-y-6">
                 <div>
                   <p className="text-sm text-gray-500 font-medium">Total Students Placed via Referrals</p>
-                  <p className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-400 mt-1">4</p>
+                  <p className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-400 mt-1">0</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 font-medium">Total Link Clicks</p>
-                  <p className="text-3xl font-extrabold text-gray-900 mt-1">173</p>
+                  <p className="text-3xl font-extrabold text-gray-900 mt-1">0</p>
                 </div>
              </CardContent>
            </Card>

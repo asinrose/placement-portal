@@ -4,10 +4,10 @@ import { Briefcase, Building2, CheckCircle, Clock, TrendingUp, Calendar, ArrowRi
 
 export default function StudentDashboard() {
   const stats = [
-    { title: "Active Applications", value: "3", icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
-    { title: "Interviews Scheduled", value: "1", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50" },
-    { title: "Saved Jobs", value: "12", icon: Star, color: "text-indigo-500", bg: "bg-indigo-50" },
-    { title: "Companies Visited", value: "45", icon: Building2, color: "text-blue-500", bg: "bg-blue-50" },
+    { title: "Active Applications", value: "0", icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
+    { title: "Interviews Scheduled", value: "0", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50" },
+    { title: "Saved Jobs", value: "0", icon: Star, color: "text-indigo-500", bg: "bg-indigo-50" },
+    { title: "Companies Visited", value: "0", icon: Building2, color: "text-blue-500", bg: "bg-blue-50" },
   ];
 
   return (
@@ -64,11 +64,7 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <ul className="divide-y divide-gray-100">
-                {[
-                  { company: "TechCorp Global", role: "Software Engineer Intern", status: "In Review", statusColor: "bg-amber-100 text-amber-700", date: "2 days ago", logo: "T" },
-                  { company: "DataSync Inc", role: "Data Analyst", status: "Interview", statusColor: "bg-emerald-100 text-emerald-700", date: "5 days ago", logo: "D" },
-                  { company: "CloudNet Systems", role: "DevOps Engineer", status: "Applied", statusColor: "bg-blue-100 text-blue-700", date: "1 week ago", logo: "C" }
-                ].map((app, idx) => (
+                {[].map((app, idx) => (
                   <li key={idx} className="p-5 sm:px-6 hover:bg-gray-50 transition-colors group cursor-pointer">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -108,11 +104,7 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent className="p-5">
               <div className="space-y-5">
-                 {[
-                  { title: "Innovate Ltd Pre-Placement Talk", date: "Tomorrow, 10:00 AM", type: "Event", icon: Building2 },
-                  { title: "Mock Interview Session", date: "Closes in 2 days", type: "Deadline", icon: Clock },
-                  { title: "Resume Building Workshop", date: "Friday, 4:00 PM", type: "Workshop", icon: Briefcase }
-                 ].map((ann, idx) => {
+                 {[].map((ann, idx) => {
                    const Icon = ann.icon;
                    return (
                      <div key={idx} className="flex gap-4 group cursor-pointer">

@@ -5,12 +5,7 @@ import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
 
 export default function JobApprovals() {
-  const [jobs, setJobs] = useState([
-    { id: 1, company: "TechCorp Global", role: "Software Developer", ctc: "12 LPA", type: "Full-Time", date: "2 days ago", status: "Pending" },
-    { id: 2, company: "DataSync Inc", role: "Data Scientist", ctc: "15 LPA", type: "Full-Time", date: "4 days ago", status: "Pending" },
-    { id: 3, company: "CloudNet Systems", role: "DevOps Intern", ctc: "50k Stipend", type: "Internship", date: "1 week ago", status: "Pending" },
-    { id: 4, company: "Acme Corp", role: "Frontend Developer", ctc: "8 LPA", type: "Full-Time", date: "1 week ago", status: "Pending" },
-  ]);
+  const [jobs, setJobs] = useState([]);
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);

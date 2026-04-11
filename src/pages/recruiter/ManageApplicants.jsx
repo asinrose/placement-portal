@@ -6,15 +6,7 @@ import { Button } from "../../components/Button";
 export default function ManageApplicants() {
   const [activeJob, setActiveJob] = useState("Software Engineer Intern");
 
-  // Mock list of applicants
-  const [applicants, setApplicants] = useState([
-    { id: 1, name: "Alice Johnson", cgpa: "8.9", status: "Applied", tags: ["React", "Node"] },
-    { id: 2, name: "Ravi Kumar", cgpa: "7.5", status: "Applied", tags: ["Python", "Django"] },
-    { id: 3, name: "Sarah Smith", cgpa: "9.2", status: "Shortlisted", tags: ["UI/UX", "Figma"] },
-    { id: 4, name: "Michael Chang", cgpa: "8.1", status: "Interviewing", tags: ["C++", "Java"] },
-    { id: 5, name: "Priya Sharma", cgpa: "8.6", status: "Offered", tags: ["React", "Typescript"] },
-    { id: 6, name: "Tom Hollanders", cgpa: "9.5", status: "Shortlisted", tags: ["AWS", "DevOps"] },
-  ]);
+  const [applicants, setApplicants] = useState([]);
 
   const stages = ["Applied", "Shortlisted", "Interviewing", "Offered"];
 
