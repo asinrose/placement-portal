@@ -3,16 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/Card"
 import { Search, Filter, Briefcase, FileText, X } from "lucide-react";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
+import { useJobs } from "../../context/JobContext";
 
 export default function JobApprovals() {
-  const [jobs, setJobs] = useState([]);
+  const { jobs, approveJob, rejectJob } = useJobs();
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
 
   const handleApprove = (id) => {
-    setJobs(jobs.map(job => job.id === id ? { ...job, status: "Approved" } : job));
+    approveJob(id);
   };
 
   const openRejectModal = (job) => {
@@ -23,7 +24,7 @@ export default function JobApprovals() {
 
   const handleRejectConfirm = () => {
     if (!rejectReason.trim()) return;
-    setJobs(jobs.map(job => job.id === selectedJob.id ? { ...job, status: "Rejected" } : job));
+    rejectJob(selectedJob.id, rejectReason);
     setRejectModalOpen(false);
   };
 

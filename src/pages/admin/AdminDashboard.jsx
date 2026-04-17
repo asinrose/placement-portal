@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/Card";
-import { Users, Briefcase, Activity, ShieldCheck, TrendingUp, AlertCircle } from "lucide-react";
+import { Users, Briefcase, Activity, ShieldCheck, TrendingUp, AlertCircle, FileText, CheckCircle, ExternalLink } from "lucide-react";
 import { Button } from "../../components/Button";
+import { useJobs } from "../../context/JobContext";
 
 export default function AdminDashboard() {
+  const { jobs } = useJobs();
+  const approvedJobs = jobs.filter(j => j.status === "Approved");
+  const totalApplicantsPool = approvedJobs.reduce((acc, job) => acc + (job.applicants?.length || 0), 0);
   const stats = [
     { title: "Total Users", value: "0", change: "0%", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-    { title: "Active Companies", value: "0", change: "0%", icon: Briefcase, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { title: "System Health", value: "N/A", change: "N/A", icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { title: "Live Jobs", value: approvedJobs.length.toString(), change: `+${approvedJobs.length}`, icon: Briefcase, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { title: "Active Applications", value: totalApplicantsPool.toString(), change: `+${totalApplicantsPool}`, icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50" },
     { title: "Security Alerts", value: "0", change: "0", icon: ShieldCheck, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 
@@ -126,6 +130,87 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Global Jobs Overview Table */}
+      <Card className="border-none shadow-sm bg-white overflow-hidden mt-8 w-full">
+        <CardHeader className="border-b border-gray-100 bg-gray-50/50 py-4 flex flex-row items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="w-5 h-5 text-indigo-500" />
+            Live Jobs & Applications Oversight
+          </CardTitle>
+          <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+            {approvedJobs.length} Active
+          </span>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-500 uppercase bg-gray-50/80 border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-4 font-semibold">Requisition Details</th>
+                  <th className="px-6 py-4 font-semibold">Target Audience</th>
+                  <th className="px-6 py-4 font-semibold text-center">Total Applied</th>
+                  <th className="px-6 py-4 font-semibold text-center">Selected</th>
+                  <th className="px-6 py-4 font-semibold text-right">Owner</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {approvedJobs.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                      No jobs have been approved by the TPO yet.
+                    </td>
+                  </tr>
+                ) : approvedJobs.map(job => {
+                  const appliedCount = job.applicants?.length || 0;
+                  const selectedCount = job.selected?.length || 0;
+                  return (
+                  <tr key={job.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+                          {(job.companyLogo && (job.companyLogo.startsWith("blob:") || job.companyLogo.startsWith("data:") || job.companyLogo.startsWith("http"))) ? (
+                             <img src={job.companyLogo} className="w-full h-full object-cover" alt="logo"/>
+                          ) : (
+                             <img src={`https://ui-avatars.com/api/?name=${job.company}&background=random&color=fff`} className="w-full h-full object-contain" alt="logo"/>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900">{job.role}</p>
+                          <p className="text-gray-500 text-xs mt-0.5">{job.company}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border bg-gray-50 text-gray-700 border-gray-200">
+                         {job.visibility}
+                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                       <div className="flex justify-center">
+                          <div className="flex items-center gap-1.5 font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-md">
+                            <Users className="w-4 h-4"/> {appliedCount}
+                          </div>
+                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                       <div className="flex justify-center">
+                          <div className={`flex items-center gap-1.5 font-bold px-3 py-1 rounded-md ${selectedCount > 0 ? "text-emerald-700 bg-emerald-50" : "text-gray-400 bg-gray-50"}`}>
+                            <CheckCircle className="w-4 h-4"/> {selectedCount}
+                          </div>
+                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                       <p className="text-xs text-gray-900 font-medium">{job.postedBy}</p>
+                       <p className="text-[10px] text-gray-500 uppercase">{job.applyMethod}</p>
+                    </td>
+                  </tr>
+                )})}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,12 +1,22 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/Card";
 import { Briefcase, Building2, CheckCircle, Clock, TrendingUp, Calendar, ArrowRight, ChevronRight, Star } from "lucide-react";
+import { useJobs } from "../../context/JobContext";
+import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function StudentDashboard() {
+  const { jobs } = useJobs();
+  const { user } = useAuth();
+  const userEmail = user?.email || "student@example.com";
+
+  const appliedJobs = jobs.filter(job => job.applicants?.includes(userEmail));
+  const savedJobs = jobs.filter(job => job.savedBy?.includes(userEmail));
+
   const stats = [
-    { title: "Active Applications", value: "0", icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
+    { title: "Active Applications", value: appliedJobs.length.toString(), icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
     { title: "Interviews Scheduled", value: "0", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50" },
-    { title: "Saved Jobs", value: "0", icon: Star, color: "text-indigo-500", bg: "bg-indigo-50" },
+    { title: "Saved Jobs", value: savedJobs.length.toString(), icon: Star, color: "text-indigo-500", bg: "bg-indigo-50", link: "/student/saved-jobs" },
     { title: "Companies Visited", value: "0", icon: Building2, color: "text-blue-500", bg: "bg-blue-50" },
   ];
 
@@ -28,8 +38,8 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
-          return (
-            <div key={stat.title} className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-indigo-100 transition-all">
+          const CardInner = (
+            <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-indigo-100 transition-all cursor-pointer h-full">
               <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 opacity-50 group-hover:scale-150 transition-transform duration-700" />
               <div className="relative flex items-center justify-between">
                 <div>
@@ -43,6 +53,12 @@ export default function StudentDashboard() {
                 </div>
               </div>
             </div>
+          );
+          
+          return stat.link ? (
+             <Link key={stat.title} to={stat.link}>{CardInner}</Link>
+          ) : (
+             <div key={stat.title}>{CardInner}</div>
           );
         })}
       </div>

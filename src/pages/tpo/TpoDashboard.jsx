@@ -3,23 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/Card"
 import { Users, Briefcase, FileText, CheckCircle, ArrowRight, Activity, Calendar, X } from "lucide-react";
 import { Button } from "../../components/Button";
 import { Link } from "react-router-dom";
+import { useJobs } from "../../context/JobContext";
 
 export default function TpoDashboard() {
+  const { jobs, approveJob, rejectJob } = useJobs();
+  const pendingJobs = jobs.filter(j => j.status === "Pending");
   const stats = [
     { title: "Total Students", value: "0", icon: Users, color: "text-blue-500", bg: "bg-blue-50", border: "hover:border-blue-200" },
-    { title: "Total Companies", value: "0", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-50", border: "hover:border-indigo-200" },
-    { title: "Pending Approvals", value: "0", icon: FileText, color: "text-amber-500", bg: "bg-amber-50", border: "hover:border-amber-200" },
+    { title: "Total Companies", value: "2", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-50", border: "hover:border-indigo-200" },
+    { title: "Pending Approvals", value: pendingJobs.length.toString(), icon: FileText, color: "text-amber-500", bg: "bg-amber-50", border: "hover:border-amber-200" },
     { title: "Placed Students", value: "0", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50", border: "hover:border-emerald-200" },
   ];
-
-  const [jobs, setJobs] = useState([]);
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
 
   const handleApprove = (id) => {
-    setJobs(jobs.map(job => job.id === id ? { ...job, status: "Approved" } : job));
+    approveJob(id);
   };
 
   const openRejectModal = (job) => {
@@ -30,7 +31,7 @@ export default function TpoDashboard() {
 
   const handleRejectConfirm = () => {
     if (!rejectReason.trim()) return;
-    setJobs(jobs.map(job => job.id === selectedJob.id ? { ...job, status: "Rejected" } : job));
+    rejectJob(selectedJob.id, rejectReason);
     setRejectModalOpen(false);
   };
 
@@ -96,7 +97,9 @@ export default function TpoDashboard() {
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-gray-50">
-                     {jobs.map((job) => (
+                     {pendingJobs.length === 0 ? (
+                       <tr><td colSpan="4" className="px-6 py-8 text-center text-gray-500">No pending approvals at the moment.</td></tr>
+                     ) : pendingJobs.slice(0, 5).map((job) => (
                        <tr key={job.id} className="hover:bg-gray-50/50 transition-colors group">
                          <td className="px-6 py-4 font-semibold text-gray-900 flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-105 transition-transform">
