@@ -50,11 +50,17 @@ const initialProfileData = {
 
 export default function StudentProfile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [data, setData] = useState(initialProfileData);
+  const [data, setData] = useState(() => {
+    const saved = localStorage.getItem('studentProfileData');
+    return saved ? JSON.parse(saved) : initialProfileData;
+  });
   const [newSkill, setNewSkill] = useState("");
   const [resumeUrl, setResumeUrl] = useState(null);
 
-  const handleSave = () => setIsEditing(false);
+  const handleSave = () => {
+    localStorage.setItem('studentProfileData', JSON.stringify(data));
+    setIsEditing(false);
+  };
   const handleChange = (field, value) => setData(prev => ({ ...prev, [field]: value }));
   const handleNestedChange = (category, field, value) => {
     setData(prev => ({

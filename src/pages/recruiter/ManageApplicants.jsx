@@ -1,17 +1,57 @@
 import React, { useState } from "react";
-import { Search, MoreHorizontal, User, FileText, CheckCircle, Clock } from "lucide-react";
+import { Search, MoreHorizontal, User, FileText, CheckCircle, Clock, X, Mail, Phone, GraduationCap } from "lucide-react";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
 
 export default function ManageApplicants() {
   const [activeJob, setActiveJob] = useState("Software Engineer Intern");
 
-  const [applicants, setApplicants] = useState([]);
+  const [applicants, setApplicants] = useState(() => {
+    const saved = localStorage.getItem('studentProfileData');
+    if (saved) {
+      const data = JSON.parse(saved);
+      
+      let customResume = null;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('resume_job_') && key.endsWith(`_${data.email}`)) {
+          customResume = localStorage.getItem(key);
+          break;
+        }
+      }
+
+      return [{
+        id: 1,
+        name: data.fullName || "Unknown",
+        cgpa: data.cgpa || "N/A",
+        tags: data.skills || [],
+        status: "Applied",
+        email: data.email || "",
+        phone: data.phone || "",
+        course: data.course || "",
+        resumeFile: customResume || data.resumeFile || null
+      }];
+    }
+    return [];
+  });
+  const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   const stages = ["Applied", "Shortlisted", "Interviewing", "Offered"];
 
-  const moveApplicant = (id, newStatus) => {
-    setApplicants(applicants.map(app => app.id === id ? { ...app, status: newStatus } : app));
+  const moveApplicant = (app, newStatus) => {
+    setApplicants(applicants.map(a => a.id === app.id ? { ...a, status: newStatus } : a));
+    setOpenDropdownId(null);
+    
+    const notifications = JSON.parse(localStorage.getItem('student_notifications') || '[]');
+    const newNotification = {
+      id: Date.now(),
+      message: `Your application for ${activeJob} has been moved to ${newStatus}!`,
+      date: new Date().toLocaleDateString(),
+      read: false
+    };
+    localStorage.setItem('student_notifications', JSON.stringify([newNotification, ...notifications]));
+    window.dispatchEvent(new Event('notifications_updated'));
   };
 
   const stageStyle = (stage) => {
@@ -65,8 +105,8 @@ export default function ManageApplicants() {
                 
                 <div className="p-3 flex-1 overflow-y-auto space-y-3">
                    {stageApplicants.map((app) => (
-                      <div key={app.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group">
-                         <div className="flex justify-between items-start mb-3">
+                      <div key={app.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group" onClick={() => setSelectedApplicant(app)}>
+                         <div className="flex justify-between items-start mb-3 relative">
                             <div className="flex items-center gap-2">
                                <div className="w-8 h-8 flex-shrink-0 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-700 font-bold border border-indigo-100">
                                   {app.name.charAt(0)}
@@ -76,9 +116,30 @@ export default function ManageApplicants() {
                                  <p className="text-xs text-gray-500 font-medium tracking-wide">CGPA: {app.cgpa}</p>
                                </div>
                             </div>
-                            <button className="text-gray-400 hover:text-indigo-600 p-1 rounded hover:bg-gray-50 -mt-1 -mr-1">
-                               <MoreHorizontal className="w-4 h-4"/>
-                            </button>
+                            <div className="relative">
+                              <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setOpenDropdownId(openDropdownId === app.id ? null : app.id); 
+                                }} 
+                                className="text-gray-400 hover:text-indigo-600 p-1 rounded hover:bg-gray-50 -mt-1 -mr-1"
+                              >
+                                 <MoreHorizontal className="w-4 h-4"/>
+                              </button>
+                              {openDropdownId === app.id && (
+                                <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-100 z-10 py-1" onClick={e => e.stopPropagation()}>
+                                  {stage !== "Shortlisted" && stage !== "Interviewing" && stage !== "Offered" && (
+                                    <button onClick={() => moveApplicant(app, "Shortlisted")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">Move to Shortlisted</button>
+                                  )}
+                                  {stage !== "Interviewing" && stage !== "Offered" && (
+                                    <button onClick={() => moveApplicant(app, "Interviewing")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600">Move to Interviewing</button>
+                                  )}
+                                  {stage !== "Offered" && (
+                                    <button onClick={() => moveApplicant(app, "Offered")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Move to Offered</button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                          </div>
                          
                          <div className="flex flex-wrap gap-1.5 mb-4">
@@ -90,28 +151,12 @@ export default function ManageApplicants() {
                          </div>
 
                          <div className="flex items-center justify-between pt-3 border-t border-gray-100/80">
-                            <button className="text-xs text-gray-500 hover:text-indigo-600 font-medium flex items-center gap-1 transition-colors">
+                            <button 
+                               onClick={(e) => { e.stopPropagation(); }}
+                               className="text-xs text-gray-500 hover:text-indigo-600 font-medium flex items-center gap-1 transition-colors"
+                            >
                                <FileText className="w-3.5 h-3.5" /> Resume
                             </button>
-                            
-                            {/* Actions to move candidate */}
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                               {stage === "Applied" && (
-                                  <button onClick={() => moveApplicant(app.id, "Shortlisted")} className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-semibold hover:bg-indigo-100">
-                                     Shortlist
-                                  </button>
-                               )}
-                               {stage === "Shortlisted" && (
-                                  <button onClick={() => moveApplicant(app.id, "Interviewing")} className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded font-semibold hover:bg-amber-100">
-                                     Interview
-                                  </button>
-                               )}
-                               {stage === "Interviewing" && (
-                                  <button onClick={() => moveApplicant(app.id, "Offered")} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded font-semibold hover:bg-emerald-100">
-                                     Offer
-                                  </button>
-                               )}
-                            </div>
                          </div>
                       </div>
                    ))}
@@ -139,6 +184,86 @@ export default function ManageApplicants() {
           border-radius: 20px;
         }
       `}} />
+
+      {/* Student Details Modal */}
+      {selectedApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">Applicant Details</h2>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setSelectedApplicant(null); }}
+                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-2xl border-4 border-white shadow-sm">
+                  {selectedApplicant.name.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">{selectedApplicant.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`px-2 py-0.5 text-xs font-semibold rounded ${stageStyle(selectedApplicant.status)}`}>
+                      {selectedApplicant.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Mail className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium">{selectedApplicant.email}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Phone className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium">{selectedApplicant.phone}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <GraduationCap className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium">{selectedApplicant.course}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700 mt-2 p-3 bg-gray-50 rounded-xl">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 uppercase font-semibold">CGPA</span>
+                    <span className="text-lg font-bold text-indigo-700">{selectedApplicant.cgpa}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                 <h4 className="text-sm font-semibold text-gray-900 mb-2">Skills</h4>
+                 <div className="flex flex-wrap gap-2">
+                   {selectedApplicant.tags.map(tag => (
+                     <span key={tag} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-100">
+                       {tag}
+                     </span>
+                   ))}
+                 </div>
+              </div>
+
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setSelectedApplicant(null)}>Close</Button>
+              {selectedApplicant.resumeFile ? (
+                 <Button 
+                   className="flex items-center gap-2 bg-indigo-600"
+                   onClick={() => window.open('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '_blank')}
+                 >
+                   <FileText className="w-4 h-4" /> View Resume
+                 </Button>
+              ) : (
+                 <Button className="flex items-center gap-2 bg-gray-400 cursor-not-allowed text-white" disabled>
+                   <FileText className="w-4 h-4" /> No resume available
+                 </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

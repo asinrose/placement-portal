@@ -28,10 +28,10 @@ export default function StudentDashboard() {
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">Welcome back, Alice! Here's an overview of your placement journey.</p>
         </div>
-        <button className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 gap-2">
+        <Link to="/student/jobs" className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 gap-2">
           <Briefcase className="w-4 h-4" />
           Browse New Jobs
-        </button>
+        </Link>
       </div>
 
       {/* Stats Grid */}
@@ -80,30 +80,44 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <ul className="divide-y divide-gray-100">
-                {[].map((app, idx) => (
-                  <li key={idx} className="p-5 sm:px-6 hover:bg-gray-50 transition-colors group cursor-pointer">
+                {appliedJobs.length === 0 ? (
+                   <li className="p-8 text-center">
+                     <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                       <Briefcase className="w-6 h-6 text-gray-300" />
+                     </div>
+                     <p className="text-gray-500 font-medium">You haven't applied to any roles yet.</p>
+                     <Link to="/student/jobs" className="text-indigo-600 text-sm hover:underline mt-1 inline-block">Explore open roles</Link>
+                   </li>
+                ) : appliedJobs.slice(0, 3).map((job, idx) => {
+                  const isSelected = job.selected?.includes(userEmail);
+                  return (
+                  <li key={job.id || idx} className="p-5 sm:px-6 hover:bg-gray-50 transition-colors group cursor-pointer">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-sm group-hover:shadow-md transition-shadow">
-                          {app.logo}
+                        <div className="w-12 h-12 rounded-xl border border-gray-100 flex items-center justify-center overflow-hidden bg-white shadow-sm group-hover:shadow-md transition-shadow shrink-0">
+                           {(job.companyLogo && (job.companyLogo.startsWith("blob:") || job.companyLogo.startsWith("data:") || job.companyLogo.startsWith("http"))) ? (
+                               <img src={job.companyLogo} alt="logo" className="w-full h-full object-cover"/>
+                           ) : (
+                               <img src={`https://ui-avatars.com/api/?name=${job.company}&background=random&color=fff`} alt="logo" className="w-full h-full object-contain"/>
+                           )}
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{app.role}</p>
+                          <p className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{job.role}</p>
                           <p className="text-sm text-gray-500 flex items-center gap-2 mt-0.5">
                             <Building2 className="w-3.5 h-3.5" />
-                            {app.company}
+                            {job.company}
                           </p>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${app.statusColor}`}>
-                          {app.status}
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${isSelected ? "bg-emerald-100 text-emerald-800" : "bg-indigo-50 text-indigo-700"}`}>
+                          {isSelected ? "Selected" : "Under Review"}
                         </span>
-                        <p className="text-xs text-gray-400 font-medium">{app.date}</p>
+                        <p className="text-xs text-gray-400 font-medium">Applied recently</p>
                       </div>
                     </div>
                   </li>
-                ))}
+                )})}
               </ul>
             </CardContent>
           </Card>

@@ -3,7 +3,7 @@ import { useJobs } from "../../context/JobContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
-import { Briefcase, MapPin, DollarSign, Clock, Search, CheckCircle, X, Filter, GraduationCap, Building2, Calendar, Target, AlertCircle, ExternalLink, Bookmark } from "lucide-react";
+import { Briefcase, MapPin, DollarSign, Clock, Search, CheckCircle, X, Filter, GraduationCap, Building2, Calendar, Target, AlertCircle, ExternalLink, Bookmark, FileText, Upload } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 export default function JobBoard() {
@@ -16,8 +16,35 @@ export default function JobBoard() {
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [applySuccess, setApplySuccess] = useState(null);
 
-  // We only show approved jobs to students
-  const approvedJobs = jobs.filter(j => j.status === "Approved");
+  const [profileResumeName] = useState(() => {
+    const saved = localStorage.getItem('studentProfileData');
+    if (saved) {
+      const data = JSON.parse(saved);
+      return data.resumeFile || null;
+    }
+    return null;
+  });
+  
+  const [selectedResume, setSelectedResume] = useState(profileResumeName);
+  const [showUploadResume, setShowUploadResume] = useState(!profileResumeName);
+
+  const handleFileUpload = (e) => {
+    if (e.target.files[0]) {
+      setSelectedResume(e.target.files[0].name);
+      setShowUploadResume(false);
+    }
+  };
+
+  const isDeadlinePassed = (deadlineDate) => {
+    if (!deadlineDate) return false;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const deadline = new Date(deadlineDate);
+    return today > deadline;
+  };
+
+  // We only show approved and non-expired jobs to students
+  const approvedJobs = jobs.filter(j => j.status === "Approved" && !isDeadlinePassed(j.deadline));
   
   const filteredJobs = approvedJobs.filter(job => {
     const matchSearch = job.role.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,6 +61,12 @@ export default function JobBoard() {
     }
 
     applyForJob(job.id, currentUserEmail);
+    
+    // Save the specific resume used for this application in localStorage (for the mock)
+    if (selectedResume) {
+      localStorage.setItem(`resume_job_${job.id}_${currentUserEmail}`, selectedResume);
+    }
+
     setApplySuccess(job.id);
     setTimeout(() => setApplySuccess(null), 3000);
     setSelectedJob(null);
@@ -42,14 +75,6 @@ export default function JobBoard() {
   const handleSave = (e, job) => {
     e.stopPropagation();
     toggleSaveJob(job.id, currentUserEmail);
-  };
-
-  const isDeadlinePassed = (deadlineDate) => {
-    if (!deadlineDate) return false;
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const deadline = new Date(deadlineDate);
-    return today > deadline;
   };
 
   const getTypeBadgeColor = (type) => {
@@ -149,7 +174,7 @@ export default function JobBoard() {
                   <MapPin className="w-4 h-4 text-gray-400"/> {selectedJob.workMode} {selectedJob.location ? `• ${selectedJob.location}` : ""}
                 </span>
                 <span className="text-sm bg-indigo-50 text-indigo-800 px-3 py-1.5 rounded-full border border-indigo-100 font-semibold flex items-center gap-1.5 shadow-sm">
-                  <DollarSign className="w-4 h-4"/> {selectedJob.salaryCurrency} {selectedJob.salaryAmount} / {selectedJob.salaryType}
+                  {selectedJob.salaryCurrency} {selectedJob.salaryAmount} / {selectedJob.salaryType}
                 </span>
                 <span className={`text-sm px-3 py-1.5 rounded-full border font-medium flex items-center gap-1.5 shadow-sm ${isDeadlinePassed(selectedJob.deadline) ? "bg-red-50 text-red-700 border-red-200" : "bg-white text-gray-800 border-gray-200"}`}>
                   <Calendar className="w-4 h-4 text-gray-400"/> Deadline: {selectedJob.deadline}
@@ -283,6 +308,38 @@ export default function JobBoard() {
                  </div>
                ) : (
                  <>
+                   <div className="sm:col-span-2 mb-4 bg-gray-50/50 p-5 rounded-xl border border-gray-100">
+                     <h4 className="font-semibold text-gray-900 mb-1">Custom resume <span className="text-gray-500 font-normal">(Optional)</span></h4>
+                     <p className="text-sm text-gray-600 mb-4">Employer can download and view this resume</p>
+                     
+                     {!showUploadResume && selectedResume ? (
+                       <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-xl shadow-sm max-w-md">
+                         <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 bg-red-100 text-red-600 rounded flex items-center justify-center font-bold text-xs shrink-0">
+                             PDF
+                           </div>
+                           <div className="flex flex-col truncate">
+                             <span className="text-sm font-medium text-gray-900 truncate">{selectedResume}</span>
+                             <span className="text-xs text-gray-500">{(Math.random() * 2 + 0.5).toFixed(1)} MB</span>
+                           </div>
+                         </div>
+                         <button onClick={() => { setShowUploadResume(true); setSelectedResume(null); }} className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors shrink-0">
+                           <X className="w-5 h-5"/>
+                         </button>
+                       </div>
+                     ) : (
+                       <div className="max-w-md">
+                         <div className="relative border-2 border-dashed border-indigo-200 rounded-xl hover:bg-indigo-50/50 transition-colors flex justify-center items-center h-16 cursor-pointer overflow-hidden">
+                           <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                           <div className="flex items-center gap-2 text-indigo-600 font-medium">
+                             <Upload className="w-5 h-5" /> Upload file
+                           </div>
+                         </div>
+                         <p className="text-xs text-gray-500 mt-2">Max file size: 10Mb. File type - PDF, DOC, DOCX</p>
+                       </div>
+                     )}
+                   </div>
+
                    <Button variant="outline" className="w-full text-base py-6" onClick={() => setSelectedJob(null)}>Cancel Action</Button>
                    <Button
                      className={`w-full text-base py-6 shadow-md transition-all ${selectedJob.applicants?.includes(currentUserEmail) ? "bg-emerald-600 shadow-emerald-200" : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200"}`}
@@ -348,7 +405,7 @@ export default function JobBoard() {
                     <div className="flex items-center gap-3 text-sm text-gray-600">
                       <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gray-400" /> <span className="truncate max-w-[120px]">{job.workMode}</span></div>
                       <div className="w-1 h-1 rounded-full bg-gray-300"></div>
-                      <div className="flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-gray-400" /> {job.salaryAmount}</div>
+                      <div className="flex items-center gap-1.5 text-gray-600 font-medium"><span>{job.salaryCurrency}</span> {job.salaryAmount}</div>
                     </div>
                   </div>
 

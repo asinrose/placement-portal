@@ -128,7 +128,7 @@ export default function ManageJobs({ rolePrefix }) {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="font-semibold text-gray-700 flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-gray-400"/> {job.salaryAmount}</p>
+                      <p className="font-semibold text-gray-700 flex items-center gap-1"><span className="text-gray-400 font-medium">{job.salaryCurrency}</span> {job.salaryAmount}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{job.salaryType}</p>
                     </td>
                     <td className="px-6 py-4">

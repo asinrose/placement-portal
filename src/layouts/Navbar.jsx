@@ -1,7 +1,54 @@
-import React from "react";
-import { Bell, User, Menu } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Bell, User, Menu, Check } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Navbar({ onMenuClick, userName, role }) {
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    const loadNotifications = () => {
+      const saved = JSON.parse(localStorage.getItem('student_notifications') || '[]');
+      setNotifications(saved);
+    };
+
+    loadNotifications();
+    window.addEventListener('storage', loadNotifications);
+    // Custom event for same-window updates
+    window.addEventListener('notifications_updated', loadNotifications);
+
+    return () => {
+      window.removeEventListener('storage', loadNotifications);
+      window.removeEventListener('notifications_updated', loadNotifications);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAllAsRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updated);
+    localStorage.setItem('student_notifications', JSON.stringify(updated));
+    window.dispatchEvent(new Event('notifications_updated'));
+  };
+
+  const handleBellClick = () => {
+    if (unreadCount > 0) {
+      markAllAsRead();
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -20,10 +67,12 @@ export default function Navbar({ onMenuClick, userName, role }) {
           <div className="md:hidden"></div>
 
           <div className="ml-4 flex items-center gap-4 md:ml-6">
-            <button className="p-1 rounded-full text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors relative">
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white block"></span>
-              <Bell className="h-6 w-6" />
-            </button>
+            <div className="relative">
+              <Link to={role === "STUDENT" ? "/student/notifications" : "#"} onClick={handleBellClick} className="p-1 rounded-full text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors relative block">
+                {unreadCount > 0 && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white block"></span>}
+                <Bell className="h-6 w-6" />
+              </Link>
+            </div>
 
             {/* Profile dropdown UI (Static for now) */}
             <div className="flex items-center gap-3">

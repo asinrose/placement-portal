@@ -6,13 +6,13 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 
 // Pages
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentProfile from "./pages/student/StudentProfile";
 import JobBoard from "./pages/student/JobBoard";
 import StudentApplications from "./pages/student/StudentApplications";
 import StudentSavedJobs from "./pages/student/StudentSavedJobs";
+import Notifications from "./pages/student/Notifications";
 import TpoDashboard from "./pages/tpo/TpoDashboard";
 import JobApprovals from "./pages/tpo/JobApprovals";
 import StudentManagement from "./pages/tpo/StudentManagement";
@@ -52,6 +52,7 @@ export const ALUMNI_NAV = [
   { name: "Dashboard", href: "/alumni/dashboard", icon: LayoutDashboard },
   { name: "Post Job", href: "/alumni/post-job", icon: Briefcase },
   { name: "My Jobs", href: "/alumni/my-jobs", icon: FileText },
+  { name: "Manage Applicants", href: "/alumni/applicants", icon: Users },
   { name: "Interviews", href: "/alumni/interviews", icon: Video },
   { name: "Referrals", href: "/alumni/referrals", icon: Briefcase },
   { name: "Community", href: "/alumni/community", icon: MessageSquare },
@@ -86,8 +87,8 @@ export default function App() {
         <JobProvider>
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Auth />} />
+            <Route path="/register" element={<Auth />} />
 
             {/* Student Routes */}
             <Route element={<ProtectedRoute allowedRoles={["STUDENT"]} />}>
@@ -97,6 +98,7 @@ export default function App() {
                 <Route path="/student/jobs" element={<JobBoard />} />
                 <Route path="/student/applications" element={<StudentApplications />} />
                 <Route path="/student/saved-jobs" element={<StudentSavedJobs />} />
+                <Route path="/student/notifications" element={<Notifications />} />
               </Route>
             </Route>
 
@@ -129,6 +131,7 @@ export default function App() {
                 <Route path="/alumni/post-job" element={<PostJob />} />
                 <Route path="/alumni/my-jobs" element={<ManageJobs rolePrefix="alumni" />} />
                 <Route path="/alumni/edit-job/:jobId" element={<PostJob />} />
+                <Route path="/alumni/applicants" element={<ManageApplicants />} />
                 <Route path="/alumni/interviews" element={<MockInterviews />} />
                 <Route path="/alumni/referrals" element={<JobReferrals />} />
                 <Route path="/alumni/community" element={<DummyDashboard title="Community & Forum" />} />

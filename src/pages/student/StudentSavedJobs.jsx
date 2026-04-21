@@ -105,7 +105,7 @@ export default function StudentSavedJobs() {
                       <div className="flex items-center gap-3 text-sm text-gray-600">
                         <div className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-gray-400" /> <span className="truncate max-w-[120px]">{job.workMode}</span></div>
                         <div className="w-1 h-1 rounded-full bg-gray-300"></div>
-                        <div className="flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-gray-400" /> {job.salaryAmount}</div>
+                        <div className="flex items-center gap-1.5 text-gray-600 font-medium"><span>{job.salaryCurrency}</span> {job.salaryAmount}</div>
                       </div>
                     </div>
 
@@ -158,7 +158,7 @@ export default function StudentSavedJobs() {
               <div className="flex flex-wrap gap-3">
                 <span className={`text-sm font-semibold px-3 py-1.5 rounded-full border ${getTypeBadgeColor(selectedJob.type)}`}>{selectedJob.type}</span>
                 <span className="text-sm bg-indigo-50 text-indigo-800 px-3 py-1.5 rounded-full border border-indigo-100 font-semibold flex items-center gap-1.5 shadow-sm">
-                  <DollarSign className="w-4 h-4"/> {selectedJob.salaryCurrency} {selectedJob.salaryAmount} / {selectedJob.salaryType}
+                  {selectedJob.salaryCurrency} {selectedJob.salaryAmount} / {selectedJob.salaryType}
                 </span>
                 <span className={`text-sm px-3 py-1.5 rounded-full border font-medium flex items-center gap-1.5 shadow-sm ${isDeadlinePassed(selectedJob.deadline) ? "bg-red-50 text-red-700 border-red-200" : "bg-white text-gray-800 border-gray-200"}`}>
                   <Calendar className="w-4 h-4 text-gray-400"/> Deadline: {selectedJob.deadline}
