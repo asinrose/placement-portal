@@ -89,7 +89,22 @@ export default function StudentDashboard() {
                      <Link to="/student/jobs" className="text-indigo-600 text-sm hover:underline mt-1 inline-block">Explore open roles</Link>
                    </li>
                 ) : appliedJobs.slice(0, 3).map((job, idx) => {
-                  const isSelected = job.selected?.includes(userEmail);
+                  const appStatuses = JSON.parse(localStorage.getItem('student_application_statuses') || '{}');
+                  const currentStatus = appStatuses[`${job.role}_${userEmail}`] || (job.selected?.includes(userEmail) ? "Offered" : "Applied");
+                  
+                  let statusColor = "bg-indigo-50 text-indigo-700";
+                  let statusText = "Under Review";
+                  if (currentStatus === "Offered" || currentStatus === "Selected") {
+                    statusColor = "bg-emerald-100 text-emerald-800";
+                    statusText = "Offered";
+                  } else if (currentStatus === "Interviewing") {
+                    statusColor = "bg-amber-100 text-amber-800";
+                    statusText = "Interviewing";
+                  } else if (currentStatus === "Shortlisted") {
+                    statusColor = "bg-blue-100 text-blue-800";
+                    statusText = "Shortlisted";
+                  }
+
                   return (
                   <li key={job.id || idx} className="p-5 sm:px-6 hover:bg-gray-50 transition-colors group cursor-pointer">
                     <div className="flex items-center justify-between">
@@ -110,8 +125,8 @@ export default function StudentDashboard() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${isSelected ? "bg-emerald-100 text-emerald-800" : "bg-indigo-50 text-indigo-700"}`}>
-                          {isSelected ? "Selected" : "Under Review"}
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusColor}`}>
+                          {statusText}
                         </span>
                         <p className="text-xs text-gray-400 font-medium">Applied recently</p>
                       </div>

@@ -1,57 +1,83 @@
 import React, { useState } from "react";
-import { Search, MoreHorizontal, User, FileText, CheckCircle, Clock, X, Mail, Phone, GraduationCap } from "lucide-react";
+import { Search, MoreHorizontal, User, FileText, CheckCircle, Clock, X, Mail, Phone, GraduationCap, Briefcase } from "lucide-react";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
+import { useJobs } from "../../context/JobContext";
 
 export default function ManageApplicants() {
-  const [activeJob, setActiveJob] = useState("Software Engineer Intern");
-
-  const [applicants, setApplicants] = useState(() => {
-    const saved = localStorage.getItem('studentProfileData');
-    if (saved) {
-      const data = JSON.parse(saved);
-      
-      let customResume = null;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('resume_job_') && key.endsWith(`_${data.email}`)) {
-          customResume = localStorage.getItem(key);
-          break;
-        }
-      }
-
-      return [{
-        id: 1,
-        name: data.fullName || "Unknown",
-        cgpa: data.cgpa || "N/A",
-        tags: data.skills || [],
-        status: "Applied",
-        email: data.email || "",
-        phone: data.phone || "",
-        course: data.course || "",
-        resumeFile: customResume || data.resumeFile || null
-      }];
-    }
-    return [];
-  });
+  const { jobs } = useJobs();
+  const [activeJobFilter, setActiveJobFilter] = useState("All Jobs");
+  const [refreshCounter, setRefreshCounter] = useState(0);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+
+  const appStatuses = JSON.parse(localStorage.getItem('student_application_statuses') || '{}');
+  const savedProfile = JSON.parse(localStorage.getItem('studentProfileData') || 'null');
+  const activeUsers = JSON.parse(localStorage.getItem('nexus_active_users') || '[]');
+  const pendingUsers = JSON.parse(localStorage.getItem('nexus_pending_requests') || '[]');
+  
+  const allApplicants = jobs.flatMap(job => {
+    return (job.applicants || []).map((email, idx) => {
+         const isSelf = savedProfile && savedProfile.email === email;
+         const regUser = activeUsers.find(u => u.email === email) || pendingUsers.find(u => u.email === email);
+         
+         let name = email.split('@')[0];
+         if (isSelf && savedProfile.fullName) {
+            name = savedProfile.fullName;
+         } else if (regUser && regUser.name) {
+            name = regUser.name;
+         } else {
+            // Provide realistic mock names for generic emails
+            const mockNames = ["Aarav Patel", "Priya Sharma", "Rohan Gupta", "Ananya Singh", "Karan Malhotra"];
+            const hash = email.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            name = mockNames[hash % mockNames.length];
+         }
+
+         const cgpa = isSelf && savedProfile.cgpa ? savedProfile.cgpa : (8.0 + (idx % 2)).toFixed(1);
+         const tags = isSelf && savedProfile.skills?.length ? savedProfile.skills : ["React", "JavaScript", "Problem Solving"];
+         const status = appStatuses[`${job.role}_${email}`] || "Applied";
+         
+         return {
+           id: `${job.id}_${email}`,
+           jobId: job.id,
+           jobRole: job.role,
+           email: email,
+           name: name,
+           cgpa: cgpa,
+           tags: tags,
+           status: status,
+           phone: isSelf && savedProfile.phone ? savedProfile.phone : `+91 98765${Math.floor(10000 + Math.random() * 90000)}`,
+           course: isSelf && savedProfile.course ? savedProfile.course : "B.Tech Computer Science",
+           resumeFile: isSelf ? savedProfile.resumeFile : null
+         };
+    });
+  });
+
+  const filteredApplicants = activeJobFilter === "All Jobs" 
+    ? allApplicants 
+    : allApplicants.filter(app => app.jobRole === activeJobFilter);
+
+  const uniqueJobRoles = ["All Jobs", ...new Set(jobs.map(j => j.role))];
 
   const stages = ["Applied", "Shortlisted", "Interviewing", "Offered"];
 
   const moveApplicant = (app, newStatus) => {
-    setApplicants(applicants.map(a => a.id === app.id ? { ...a, status: newStatus } : a));
-    setOpenDropdownId(null);
-    
+    const currentStatuses = JSON.parse(localStorage.getItem('student_application_statuses') || '{}');
+    currentStatuses[`${app.jobRole}_${app.email}`] = newStatus;
+    localStorage.setItem('student_application_statuses', JSON.stringify(currentStatuses));
+
     const notifications = JSON.parse(localStorage.getItem('student_notifications') || '[]');
     const newNotification = {
       id: Date.now(),
-      message: `Your application for ${activeJob} has been moved to ${newStatus}!`,
+      message: `Your application for ${app.jobRole} has been moved to ${newStatus}!`,
       date: new Date().toLocaleDateString(),
       read: false
     };
     localStorage.setItem('student_notifications', JSON.stringify([newNotification, ...notifications]));
     window.dispatchEvent(new Event('notifications_updated'));
+    
+    setOpenDropdownId(null);
+    setRefreshCounter(prev => prev + 1);
   };
 
   const stageStyle = (stage) => {
@@ -74,12 +100,12 @@ export default function ManageApplicants() {
         <div className="flex items-center gap-3">
           <select 
              className="h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 max-w-[200px]"
-             value={activeJob}
-             onChange={(e) => setActiveJob(e.target.value)}
+             value={activeJobFilter}
+             onChange={(e) => setActiveJobFilter(e.target.value)}
           >
-             <option>Software Engineer Intern</option>
-             <option>Full-Stack Developer</option>
-             <option>UX Designer</option>
+             {uniqueJobRoles.map(role => (
+               <option key={role} value={role}>{role}</option>
+             ))}
           </select>
           <Button variant="outline" className="bg-white">Export Board</Button>
         </div>
@@ -88,14 +114,14 @@ export default function ManageApplicants() {
       <div className="flex items-center justify-between bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-100 shrink-0">
          <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <Input type="text" placeholder={`Search among ${applicants.length} candidates...`} className="pl-9 h-9" />
+            <Input type="text" placeholder={`Search among ${filteredApplicants.length} candidates...`} className="pl-9 h-9" />
          </div>
       </div>
 
       {/* Kanban Board Container */}
       <div className="flex gap-6 overflow-x-auto pb-4 pt-2 flex-1 items-start minimal-scrollbar">
          {stages.map((stage) => {
-           const stageApplicants = applicants.filter(app => app.status === stage);
+           const stageApplicants = filteredApplicants.filter(app => app.status === stage);
            return (
              <div key={stage} className="flex-shrink-0 w-80 bg-gray-50/50 rounded-2xl flex flex-col max-h-full border border-gray-100">
                 <div className={`px-4 py-3 border-b flex items-center justify-between rounded-t-2xl font-semibold text-sm ${stageStyle(stage)}`}>
@@ -114,6 +140,9 @@ export default function ManageApplicants() {
                                <div>
                                  <h3 className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{app.name}</h3>
                                  <p className="text-xs text-gray-500 font-medium tracking-wide">CGPA: {app.cgpa}</p>
+                                 <p className="text-[10px] text-indigo-600 font-semibold mt-1 flex items-center gap-1">
+                                    <Briefcase className="w-3 h-3" /> {app.jobRole}
+                                 </p>
                                </div>
                             </div>
                             <div className="relative">

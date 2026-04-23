@@ -90,7 +90,8 @@ export default function StudentApplications() {
                     </td>
                   </tr>
                 ) : appliedJobs.map(job => {
-                  const isSelected = job.selected?.includes(userEmail);
+                  const appStatuses = JSON.parse(localStorage.getItem('student_application_statuses') || '{}');
+                  const currentStatus = appStatuses[`${job.role}_${userEmail}`] || (job.selected?.includes(userEmail) ? "Offered" : "Applied");
                   
                   return (
                   <tr key={job.id} className="hover:bg-gray-50/50 transition-colors">
@@ -118,10 +119,20 @@ export default function StudentApplications() {
                        <p className="text-gray-600 text-xs flex items-center gap-1.5 font-medium"><Calendar className="w-3.5 h-3.5 text-gray-400"/> {job.deadline}</p>
                     </td>
                     <td className="px-6 py-4 text-right">
-                       {isSelected ? (
+                       {currentStatus === "Offered" || currentStatus === "Selected" ? (
                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200">
                             <CheckCircle className="w-3.5 h-3.5"/>
-                            Selected
+                            Offered
+                         </span>
+                       ) : currentStatus === "Interviewing" ? (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-700 bg-amber-50 border border-amber-100">
+                            <Clock className="w-3.5 h-3.5"/>
+                            Interviewing
+                         </span>
+                       ) : currentStatus === "Shortlisted" ? (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100">
+                            <CheckCircle className="w-3.5 h-3.5"/>
+                            Shortlisted
                          </span>
                        ) : (
                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100">

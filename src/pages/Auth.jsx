@@ -337,12 +337,12 @@ export default function Auth() {
 
         {/* --- OVERLAY CONTAINER --- */}
         <div className={`hidden md:block absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-transform duration-700 ease-in-out z-20 ${isSignUp ? '-translate-x-full' : 'translate-x-0'}`}>
-          <div className={`absolute top-0 -left-[100%] w-[200%] h-full bg-gradient-to-br from-[#ff6b6b] via-[#e65c9c] to-[#9b51e0] transition-transform duration-700 ease-in-out text-white ${isSignUp ? 'translate-x-1/2' : 'translate-x-0'}`}>
+          <div className={`absolute top-0 -left-[100%] w-[200%] h-full bg-cover bg-center transition-transform duration-700 ease-in-out text-white ${isSignUp ? 'translate-x-1/2' : 'translate-x-0'}`} style={{ backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("/college_campus.png")' }}>
 
             {/* Overlay Left Panel (Active when signing up, sits on the left side of the screen) */}
             <div className={`absolute top-0 left-0 w-1/2 h-full flex flex-col items-center justify-center px-12 text-center transition-transform duration-700 ease-in-out ${isSignUp ? 'translate-x-0' : '-translate-x-[20%]'}`}>
               <div className="w-32 h-32 rounded-full overflow-hidden border-[6px] border-white mb-6 shadow-xl bg-white flex items-center justify-center">
-                <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Students collaborating" className="w-full h-full object-cover" />
+                <img src="/college_logo.png" alt="College Logo" className="w-full h-full object-contain p-2" />
               </div>
               <h2 className="text-4xl font-bold mb-4">Welcome Back!</h2>
               <p className="text-white/90 text-sm leading-relaxed mb-8 max-w-[280px]">
@@ -359,7 +359,7 @@ export default function Auth() {
             {/* Overlay Right Panel (Active when signing in, sits on the right side of the screen) */}
             <div className={`absolute top-0 right-0 w-1/2 h-full flex flex-col items-center justify-center px-12 text-center transition-transform duration-700 ease-in-out ${isSignUp ? 'translate-x-[20%]' : 'translate-x-0'}`}>
               <div className="w-32 h-32 rounded-full overflow-hidden border-[6px] border-white mb-6 shadow-xl bg-white flex items-center justify-center">
-                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Students celebrating" className="w-full h-full object-cover" />
+                <img src="/college_logo.png" alt="College Logo" className="w-full h-full object-contain p-2" />
               </div>
               <h2 className="text-4xl font-bold mb-4">Join Our Community!</h2>
               <p className="text-white/90 text-sm leading-relaxed mb-8 max-w-[280px]">
