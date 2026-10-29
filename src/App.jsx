@@ -20,6 +20,7 @@ import CompanyManagement from "./pages/tpo/CompanyManagement";
 import RecruiterDashboard from "./pages/recruiter/RecruiterDashboard";
 import PostJob from "./pages/recruiter/PostJob";
 import ManageApplicants from "./pages/recruiter/ManageApplicants";
+import RecruiterInterviews from "./pages/recruiter/RecruiterInterviews";
 import AlumniDashboard from "./pages/alumni/AlumniDashboard";
 import JobReferrals from "./pages/alumni/JobReferrals";
 import MockInterviews from "./pages/alumni/MockInterviews";
@@ -27,6 +28,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import AdminStudentManagement from "./pages/admin/AdminStudentManagement";
 import ManageJobs from "./components/shared/ManageJobs";
+import SystemSettings from "./components/shared/SystemSettings";
+import CommunityForum from "./components/shared/CommunityForum";
 
 // Dummy dashboard pages to verify the layout works
 const DummyDashboard = ({ title }) => (
@@ -63,6 +66,7 @@ export const STUDENT_NAV = [
   { name: "My Profile", href: "/student/profile", icon: Users },
   { name: "Job Board", href: "/student/jobs", icon: Briefcase },
   { name: "Applications", href: "/student/applications", icon: FileText },
+  { name: "Community", href: "/student/community", icon: MessageSquare },
 ];
 
 export const RECRUITER_NAV = [
@@ -70,6 +74,8 @@ export const RECRUITER_NAV = [
   { name: "Post Job", href: "/recruiter/post-job", icon: Briefcase },
   { name: "My Jobs", href: "/recruiter/my-jobs", icon: FileText },
   { name: "Manage Applicants", href: "/recruiter/applicants", icon: Users },
+  { name: "Interviews", href: "/recruiter/interviews", icon: Video },
+  { name: "Community", href: "/recruiter/community", icon: MessageSquare },
 ];
 
 export const TPO_NAV = [
@@ -99,6 +105,7 @@ export default function App() {
                 <Route path="/student/applications" element={<StudentApplications />} />
                 <Route path="/student/saved-jobs" element={<StudentSavedJobs />} />
                 <Route path="/student/notifications" element={<Notifications />} />
+                <Route path="/student/community" element={<CommunityForum />} />
               </Route>
             </Route>
 
@@ -110,6 +117,8 @@ export default function App() {
                 <Route path="/recruiter/my-jobs" element={<ManageJobs rolePrefix="recruiter" />} />
                 <Route path="/recruiter/edit-job/:jobId" element={<PostJob />} />
                 <Route path="/recruiter/applicants" element={<ManageApplicants />} />
+                <Route path="/recruiter/interviews" element={<RecruiterInterviews />} />
+                <Route path="/recruiter/community" element={<CommunityForum />} />
               </Route>
             </Route>
 
@@ -120,7 +129,7 @@ export default function App() {
                 <Route path="/tpo/students" element={<StudentManagement />} />
                 <Route path="/tpo/companies" element={<CompanyManagement />} />
                 <Route path="/tpo/jobs" element={<JobApprovals />} />
-                <Route path="/tpo/settings" element={<DummyDashboard title="System Settings" />} />
+                <Route path="/tpo/settings" element={<SystemSettings />} />
               </Route>
             </Route>
 
@@ -134,7 +143,7 @@ export default function App() {
                 <Route path="/alumni/applicants" element={<ManageApplicants />} />
                 <Route path="/alumni/interviews" element={<MockInterviews />} />
                 <Route path="/alumni/referrals" element={<JobReferrals />} />
-                <Route path="/alumni/community" element={<DummyDashboard title="Community & Forum" />} />
+                <Route path="/alumni/community" element={<CommunityForum />} />
               </Route>
             </Route>
 
@@ -144,7 +153,7 @@ export default function App() {
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<UserManagement />} />
                 <Route path="/admin/students" element={<AdminStudentManagement />} />
-                <Route path="/admin/settings" element={<DummyDashboard title="System Settings" />} />
+                <Route path="/admin/settings" element={<SystemSettings />} />
               </Route>
             </Route>
 

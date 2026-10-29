@@ -8,11 +8,43 @@ export default function AdminDashboard() {
   const { jobs } = useJobs();
   const approvedJobs = jobs.filter(j => j.status === "Approved");
   const totalApplicantsPool = approvedJobs.reduce((acc, job) => acc + (job.applicants?.length || 0), 0);
+  
+  const activeUsers = JSON.parse(localStorage.getItem('nexus_active_users') || '[]');
+  const pendingRequests = JSON.parse(localStorage.getItem('nexus_pending_requests') || '[]');
+
+  const [offers, setOffers] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('student_job_offers') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  const loadOffers = () => {
+    try {
+      setOffers(JSON.parse(localStorage.getItem('student_job_offers') || '[]'));
+    } catch {
+      setOffers([]);
+    }
+  };
+
+  useEffect(() => {
+    loadOffers();
+    window.addEventListener('offers_updated', loadOffers);
+    window.addEventListener('jobs_updated', loadOffers);
+    window.addEventListener('storage', loadOffers);
+    return () => {
+      window.removeEventListener('offers_updated', loadOffers);
+      window.removeEventListener('jobs_updated', loadOffers);
+      window.removeEventListener('storage', loadOffers);
+    };
+  }, []);
+
   const stats = [
-    { title: "Total Users", value: "0", change: "0%", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+    { title: "Total Users", value: activeUsers.length.toString(), change: `+${activeUsers.length}`, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
     { title: "Live Jobs", value: approvedJobs.length.toString(), change: `+${approvedJobs.length}`, icon: Briefcase, color: "text-indigo-600", bg: "bg-indigo-50" },
     { title: "Active Applications", value: totalApplicantsPool.toString(), change: `+${totalApplicantsPool}`, icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { title: "Security Alerts", value: "0", change: "0", icon: ShieldCheck, color: "text-amber-600", bg: "bg-amber-50" },
+    { title: "Pending Approvals", value: pendingRequests.length.toString(), change: `${pendingRequests.length}`, icon: ShieldCheck, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 
   const [logs, setLogs] = useState([]);
@@ -163,7 +195,22 @@ export default function AdminDashboard() {
                   </tr>
                 ) : approvedJobs.map(job => {
                   const appliedCount = job.applicants?.length || 0;
-                  const selectedCount = job.selected?.length || 0;
+                  
+                  // Compute candidates who accepted offer or were selected for this specific job
+                  const acceptedOffersForJob = offers.filter(o => 
+                    o.status === "Accepted" &&
+                    (o.jobId === job.id || 
+                     (o.jobRole && job.role && o.jobRole.toLowerCase().trim() === job.role.toLowerCase().trim() && 
+                      o.company && job.company && o.company.toLowerCase().trim() === job.company.toLowerCase().trim()))
+                  );
+
+                  const selectedEmails = new Set([
+                    ...(job.selected || []),
+                    ...acceptedOffersForJob.map(o => o.applicantEmail)
+                  ]);
+
+                  const selectedCount = selectedEmails.size;
+
                   return (
                   <tr key={job.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4">
@@ -195,7 +242,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4">
                        <div className="flex justify-center">
-                          <div className={`flex items-center gap-1.5 font-bold px-3 py-1 rounded-md ${selectedCount > 0 ? "text-emerald-700 bg-emerald-50" : "text-gray-400 bg-gray-50"}`}>
+                          <div className={`flex items-center gap-1.5 font-bold px-3 py-1 rounded-md text-xs ${selectedCount > 0 ? "text-emerald-700 bg-emerald-50 border border-emerald-200 shadow-xs" : "text-gray-400 bg-gray-50"}`}>
                             <CheckCircle className="w-4 h-4"/> {selectedCount}
                           </div>
                        </div>

@@ -2,65 +2,158 @@ import React, { useState } from "react";
 import { 
   User, Mail, Phone, Calendar, MapPin, Briefcase, GraduationCap, 
   Award, FileText, Globe, Upload, Edit2, Save, Download, 
-  Plus, Trash2, CheckCircle2, XCircle, Code, DollarSign, Link, ExternalLink
+  Plus, Trash2, CheckCircle2, XCircle, Code, DollarSign, Link, ExternalLink,
+  ShieldAlert, Check, Sparkles, AlertCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/Card";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
 import AtsResume from "../../components/AtsResume";
+import { useAuth } from "../../context/AuthContext";
+import { downloadAtsResume } from "../../utils/resumeHelper";
 
-// Initial Demo Data
-const initialProfileData = {
-  fullName: "Aliya Sharma",
-  studentId: "CS2024-042",
-  email: "aliya.sharma@college.edu",
-  phone: "+91 98765 43210",
-  dob: "2002-05-15",
-  course: "B.Tech Computer Science",
-  college: "National Institute of Technology",
-  yearSem: "4th Year / 8th Sem",
-  cgpa: "8.9",
-  marks10th: "95%",
-  marks12th: "92%",
-  resumeFile: "aliya_sharma_resume_v2.pdf",
-  skills: ["React", "JavaScript", "Python", "Tailwind CSS", "Node.js", "SQL", "Git"],
-  projects: [
-    { id: 1, title: "Placement Portal Management System", desc: "A comprehensive dual-portal for students and TPO to manage drives.", tech: "React, Node, Express, MongoDB", link: "github.com/aliyas/placement-portal" },
-    { id: 2, title: "AI Image Generator", desc: "Uses Stable Diffusion API to generate images from text prompts.", tech: "Python, FastAPI, React", link: "github.com/aliyas/ai-gen" }
-  ],
-  experience: [
-    { id: 1, company: "TechNova Solutions", role: "Frontend Developer Intern", duration: "May 2023 - July 2023", desc: "Developed responsive dashboards using React and tailwind CSS leading to a 20% increase in performance." }
-  ],
-  certifications: [
-    { id: 1, course: "Meta Front-End Developer", platform: "Coursera", link: "coursera.org/verify/MFE123" },
-    { id: 2, course: "AWS Cloud Practitioner", platform: "AWS Training", link: "aws.amazon.com/cert/ABC" }
-  ],
+const createBlankProfile = (user) => ({
+  fullName: user?.name || "Aliya",
+  studentId: user?.registerNumber || user?.studentId || "24411",
+  email: user?.email || "24411@university.edu",
+  phone: user?.phone || "",
+  dob: user?.dob || "2006-07-20",
+  degree: user?.degree || "B.Tech",
+  course: user?.branch || user?.department || user?.course || "Data Analytics",
+  college: user?.college || "National Institute of Technology and sciences",
+  yearSem: user?.yearSem || "3, 6th semester",
+  cgpa: user?.cgpa || "7",
+  backlogs: user?.backlogs || "0",
+  marks10th: user?.marks10th || "85%",
+  marks12th: user?.marks12th || "85%",
+  resumeFile: null,
+  resumeData: null,
+  skills: ["React", "Node.js", "Express", "MongoDB"],
+  projects: [],
+  experience: [],
+  certifications: [],
   preferences: {
-    role: "Frontend Engineer / Full Stack Developer",
-    location: "Bangalore, Pune, Remote",
-    salary: "8 - 12 LPA"
+    role: "front-end dev, software engineer",
+    location: "Any",
+    salary: ""
   },
   socials: {
-    github: "github.com/aliyas",
-    linkedin: "linkedin.com/in/aliyas",
-    portfolio: "aliyasharma.dev"
+    github: "",
+    linkedin: "",
+    portfolio: ""
   },
-  status: "Eligible" // Eligible, Not Placed, Placed
-};
+  status: "Eligible"
+});
 
 export default function StudentProfile() {
+  const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState("");
+  
   const [data, setData] = useState(() => {
-    const saved = localStorage.getItem('studentProfileData');
-    return saved ? JSON.parse(saved) : initialProfileData;
+    try {
+      const userKey = user?.email ? `studentProfileData_${user.email}` : 'studentProfileData';
+      const saved = localStorage.getItem(userKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (!user?.email || parsed.email === user.email || !parsed.email) {
+          return { 
+            ...createBlankProfile(user), 
+            ...parsed,
+            degree: parsed.degree || "B.Tech",
+            backlogs: parsed.backlogs !== undefined ? parsed.backlogs : "0"
+          };
+        }
+      }
+      const generalSaved = localStorage.getItem('studentProfileData');
+      if (generalSaved) {
+        const parsed = JSON.parse(generalSaved);
+        if (user?.email && parsed.email === user.email) {
+          return { 
+            ...createBlankProfile(user), 
+            ...parsed,
+            degree: parsed.degree || "B.Tech",
+            backlogs: parsed.backlogs !== undefined ? parsed.backlogs : "0"
+          };
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return createBlankProfile(user);
   });
+
   const [newSkill, setNewSkill] = useState("");
   const [resumeUrl, setResumeUrl] = useState(null);
 
-  const handleSave = () => {
-    localStorage.setItem('studentProfileData', JSON.stringify(data));
-    setIsEditing(false);
+  const handleProfilePicUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleChange('profilePicture', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
+
+  const handleSave = () => {
+    // 1. Save to localStorage keys for student profile
+    localStorage.setItem('studentProfileData', JSON.stringify(data));
+    if (user?.email) {
+      localStorage.setItem(`studentProfileData_${user.email}`, JSON.stringify(data));
+    }
+    if (data.email && data.email !== user?.email) {
+      localStorage.setItem(`studentProfileData_${data.email}`, JSON.stringify(data));
+    }
+
+    // 2. Synchronize with nexus_active_users directory
+    try {
+      const activeUsers = JSON.parse(localStorage.getItem('nexus_active_users') || '[]');
+      const userEmailToMatch = user?.email || data.email;
+      const updatedUsers = activeUsers.map(u => {
+        if (u.email === userEmailToMatch) {
+          return {
+            ...u,
+            name: data.fullName,
+            phone: data.phone,
+            cgpa: data.cgpa,
+            course: data.course,
+            degree: data.degree || "B.Tech",
+            branch: data.course,
+            department: data.course,
+            backlogs: data.backlogs,
+            profilePicture: data.profilePicture || u.profilePicture
+          };
+        }
+        return u;
+      });
+      localStorage.setItem('nexus_active_users', JSON.stringify(updatedUsers));
+    } catch (e) {
+      console.error("Error updating active users:", e);
+    }
+
+    // 3. Update Auth context & current logged-in user state
+    updateUser({ 
+      name: data.fullName, 
+      profilePicture: data.profilePicture,
+      cgpa: data.cgpa,
+      course: data.course,
+      degree: data.degree,
+      branch: data.course,
+      backlogs: data.backlogs,
+      phone: data.phone
+    });
+
+    // 4. Dispatch live browser events for real-time Job Board criteria evaluation
+    window.dispatchEvent(new Event('profile_updated'));
+    window.dispatchEvent(new Event('storage'));
+
+    setIsEditing(false);
+    setSaveSuccessMessage("Profile changes saved! Eligibility criteria updated on Job Board.");
+    setTimeout(() => setSaveSuccessMessage(""), 4500);
+  };
+
   const handleChange = (field, value) => setData(prev => ({ ...prev, [field]: value }));
   const handleNestedChange = (category, field, value) => {
     setData(prev => ({
@@ -77,23 +170,46 @@ export default function StudentProfile() {
   };
 
   const handleViewResume = () => {
-    if (resumeUrl) {
-      window.open(resumeUrl, '_blank');
+    const targetData = resumeUrl || data.resumeData;
+    if (targetData) {
+      if (targetData.startsWith('data:')) {
+        try {
+          const arr = targetData.split(',');
+          const mimeMatch = arr[0].match(/:(.*?);/);
+          const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+          const bstr = atob(arr[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+          }
+          const blob = new Blob([u8arr], { type: mime });
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+          return;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      window.open(targetData, '_blank');
     } else {
-      // Open a sample PDF to demonstrate view functionality if no file uploaded
-      window.open('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '_blank');
+      alert("No uploaded resume found. Please click 'Edit Profile' to upload a custom resume PDF, or click 'Download PDF' above to export your ATS resume.");
     }
   };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      handleChange('resumeFile', file.name);
-      if (resumeUrl) {
-        URL.revokeObjectURL(resumeUrl);
-      }
-      const fileUrl = URL.createObjectURL(file);
-      setResumeUrl(fileUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setData(prev => ({
+          ...prev,
+          resumeFile: file.name,
+          resumeData: reader.result
+        }));
+        setResumeUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -109,6 +225,47 @@ export default function StudentProfile() {
     setData(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skillToRemove) }));
   };
 
+  const addProject = () => {
+    const newProj = { id: Date.now(), title: "Project Title", desc: "", tech: "", link: "" };
+    setData(prev => ({ ...prev, projects: [...prev.projects, newProj] }));
+  };
+  const removeProject = (id) => {
+    setData(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== id) }));
+  };
+
+  const addExperience = () => {
+    const newExp = { id: Date.now(), role: "Role / Position", company: "", duration: "", desc: "" };
+    setData(prev => ({ ...prev, experience: [...prev.experience, newExp] }));
+  };
+  const removeExperience = (id) => {
+    setData(prev => ({ ...prev, experience: prev.experience.filter(e => e.id !== id) }));
+  };
+
+  const addCertification = () => {
+    const newCert = { id: Date.now(), course: "Certification Title", platform: "", link: "" };
+    setData(prev => ({ ...prev, certifications: [...prev.certifications, newCert] }));
+  };
+  const removeCertification = (id) => {
+    setData(prev => ({ ...prev, certifications: prev.certifications.filter(c => c.id !== id) }));
+  };
+
+  const calculateCompletion = () => {
+    let score = 0;
+    const total = 9;
+    if (data.fullName) score++;
+    if (data.email) score++;
+    if (data.phone) score++;
+    if (data.college) score++;
+    if (data.degree) score++;
+    if (data.course) score++;
+    if (data.cgpa) score++;
+    if (data.resumeFile) score++;
+    if (data.skills?.length > 0) score++;
+    return Math.round((score / total) * 100);
+  };
+
+  const completionPercent = calculateCompletion();
+
   const getStatusColor = (status) => {
     switch(status) {
       case 'Placed': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
@@ -121,47 +278,70 @@ export default function StudentProfile() {
   return (
     <>
     <div className="print:hidden flex flex-col gap-6 p-1 max-w-7xl mx-auto">
+      
+      {/* Save Success Alert Banner */}
+      {saveSuccessMessage && (
+        <div className="bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-lg flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-200 shrink-0" />
+            <span className="text-sm font-semibold">{saveSuccessMessage}</span>
+          </div>
+          <button onClick={() => setSaveSuccessMessage("")} className="text-white/80 hover:text-white p-1">
+            <XCircle className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <div className="flex items-center gap-6">
           <div className="relative">
-            <div className="h-24 w-24 rounded-full bg-indigo-100 flex items-center justify-center border-4 border-white shadow-md overflow-hidden">
-              <User size={40} className="text-indigo-400" />
-              {/* Image would go here */}
+            <div className="h-24 w-24 rounded-full bg-indigo-100 flex items-center justify-center border-4 border-white shadow-md overflow-hidden relative group">
+              {data.profilePicture ? (
+                <img src={data.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User size={40} className="text-indigo-400" />
+              )}
+              {isEditing && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <Upload className="w-6 h-6 text-white" />
+                  <input type="file" accept="image/*" onChange={handleProfilePicUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                </div>
+              )}
             </div>
             {isEditing && (
-              <button className="absolute bottom-0 right-0 p-1.5 bg-indigo-600 text-white rounded-full shadow-sm hover:bg-indigo-700">
+              <div className="absolute bottom-0 right-0 p-1.5 bg-indigo-600 text-white rounded-full shadow-sm pointer-events-none">
                 <Edit2 size={12} />
-              </button>
+              </div>
             )}
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">{data.fullName}</h1>
             <p className="text-gray-500 font-medium flex items-center gap-2 mt-1">
-              <GraduationCap size={16} /> {data.course}
+              <GraduationCap size={16} /> {data.degree ? `${data.degree} • ` : ""}{data.course}
             </p>
             <div className="flex items-center gap-2 mt-3">
                <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(data.status)}`}>
                   {data.status}
                </span>
-               <span className="text-sm text-gray-500 font-medium ml-2">Profile Complete: 85%</span>
+               <span className="text-sm text-gray-500 font-medium ml-2">Profile Complete: {completionPercent}%</span>
                <div className="w-24 h-2 bg-gray-200 rounded-full ml-1 overflow-hidden">
-                 <div className="bg-indigo-600 h-full rounded-full" style={{ width: '85%' }}></div>
+                 <div className="bg-indigo-600 h-full rounded-full transition-all duration-500" style={{ width: `${completionPercent}%` }}></div>
                </div>
             </div>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <Button onClick={() => window.print()} variant="outline" className="flex items-center gap-2">
+          <Button onClick={() => downloadAtsResume(data)} variant="outline" className="flex items-center gap-2">
             <Download size={16} /> Download PDF
           </Button>
           {isEditing ? (
-            <Button onClick={handleSave} className="flex items-center gap-2 bg-indigo-600">
-              <Save size={16} /> Save Profile
+            <Button onClick={handleSave} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-sm font-bold">
+              <Save size={16} /> Save Changes
             </Button>
           ) : (
-            <Button onClick={() => setIsEditing(true)} className="flex items-center gap-2 bg-indigo-600">
+            <Button onClick={() => setIsEditing(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 font-semibold">
               <Edit2 size={16} /> Edit Profile
             </Button>
           )}
@@ -182,10 +362,10 @@ export default function StudentProfile() {
               {isEditing ? (
                 <>
                   <Input label="Full Name" value={data.fullName} onChange={(e) => handleChange('fullName', e.target.value)} />
-                  <Input label="Student ID" value={data.studentId} onChange={(e) => handleChange('studentId', e.target.value)} />
+                  <Input label="Student ID / Reg No" value={data.studentId} onChange={(e) => handleChange('studentId', e.target.value)} />
                   <Input label="Email" type="email" value={data.email} onChange={(e) => handleChange('email', e.target.value)} />
                   <Input label="Phone" value={data.phone} onChange={(e) => handleChange('phone', e.target.value)} />
-                  <Input label="Date of Birth" type="date" value={data.dob} onChange={(e) => handleChange('dob', e.target.value)} />
+                  <Input label="Date of Birth" type="date" max={new Date().toLocaleDateString('en-CA')} value={data.dob} onChange={(e) => handleChange('dob', e.target.value)} />
                 </>
               ) : (
                 <div className="space-y-3">
@@ -199,11 +379,11 @@ export default function StudentProfile() {
                   </div>
                   <div className="flex items-center gap-3 text-gray-700">
                     <Phone size={16} className="text-gray-400" />
-                    <span className="text-sm font-medium">{data.phone}</span>
+                    <span className="text-sm font-medium">{data.phone || "Not specified"}</span>
                   </div>
                   <div className="flex items-center gap-3 text-gray-700">
                     <Calendar size={16} className="text-gray-400" />
-                    <span className="text-sm font-medium">{data.dob}</span>
+                    <span className="text-sm font-medium">{data.dob || "2006-07-20"}</span>
                   </div>
                 </div>
               )}
@@ -234,7 +414,7 @@ export default function StudentProfile() {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1 flex items-center gap-1"><DollarSign size={12}/> Salary</p>
-                    <p className="text-sm text-gray-800 font-medium">{data.preferences.salary}</p>
+                    <p className="text-sm text-gray-800 font-medium">{data.preferences.salary || "Competitive"}</p>
                   </div>
                 </div>
               )}
@@ -255,15 +435,18 @@ export default function StudentProfile() {
                 </>
               ) : (
                 <div className="space-y-3">
-                  <a href={`https://${data.socials.github}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm text-gray-700 hover:text-indigo-600 transition-colors">
-                    <Code size={18} /> {data.socials.github}
-                  </a>
-                  <a href={`https://${data.socials.linkedin}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm text-gray-700 hover:text-indigo-600 transition-colors">
-                    <Link size={18} /> {data.socials.linkedin}
-                  </a>
-                  <a href={`https://${data.socials.portfolio}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm text-gray-700 hover:text-indigo-600 transition-colors">
-                    <Globe size={18} /> {data.socials.portfolio}
-                  </a>
+                  <div className="flex items-center gap-3 text-sm text-gray-700">
+                    <Code size={18} className="text-gray-400" />
+                    <span>{data.socials.github || "github.com"}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-700">
+                    <Link size={18} className="text-gray-400" />
+                    <span>{data.socials.linkedin || "linkedin.com"}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-700">
+                    <Globe size={18} className="text-gray-400" />
+                    <span>{data.socials.portfolio || "portfolio.dev"}</span>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -273,48 +456,170 @@ export default function StudentProfile() {
         {/* Right Column (span 2) */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Academic Details */}
-          <Card>
-            <CardHeader className="border-b border-gray-100 pb-4 mb-4">
-              <CardTitle className="text-lg">Academic Details</CardTitle>
+          {/* Academic Details - Directly Connected to Job Board Eligibility Evaluation */}
+          <Card className="border-indigo-100 shadow-sm">
+            <CardHeader className="border-b border-gray-100 pb-4 mb-4 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-indigo-600" />
+                  Academic Details
+                </CardTitle>
+                <CardDescription>
+                  These credentials directly determine your eligibility check on the Job Board.
+                </CardDescription>
+              </div>
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                Synced with Job Board
+              </span>
             </CardHeader>
             <CardContent>
                {isEditing ? (
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input label="College Name" value={data.college} onChange={(e) => handleChange('college', e.target.value)} />
-                    <Input label="Course" value={data.course} onChange={(e) => handleChange('course', e.target.value)} />
-                    <Input label="Year & Semester" value={data.yearSem} onChange={(e) => handleChange('yearSem', e.target.value)} />
-                    <Input label="CGPA / Percentage" value={data.cgpa} onChange={(e) => handleChange('cgpa', e.target.value)} />
-                    <Input label="12th Marks" value={data.marks12th} onChange={(e) => handleChange('marks12th', e.target.value)} />
-                    <Input label="10th Marks" value={data.marks10th} onChange={(e) => handleChange('marks10th', e.target.value)} />
+                 <div className="space-y-4">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input 
+                        label="College Name" 
+                        value={data.college} 
+                        onChange={(e) => handleChange('college', e.target.value)} 
+                      />
+                      
+                      {/* Degree / Program Selector */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Degree / Program <span className="text-xs text-indigo-600 font-semibold">(Matches Eligible Courses)</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            className="w-full text-sm p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none font-semibold"
+                            value={data.degree || "B.Tech"}
+                            onChange={(e) => handleChange('degree', e.target.value)}
+                            placeholder="e.g. B.Tech, B.Sc, BCA, MCA"
+                          />
+                        </div>
+                        {/* Quick Selection Chips */}
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {["B.Tech", "B.Sc", "BCA", "MCA", "B.E.", "M.Tech"].map(deg => (
+                            <button
+                              key={deg}
+                              type="button"
+                              onClick={() => handleChange('degree', deg)}
+                              className={`text-[11px] px-2 py-0.5 rounded-md font-semibold transition-colors border ${
+                                data.degree === deg 
+                                  ? "bg-indigo-600 text-white border-indigo-600" 
+                                  : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-indigo-50"
+                              }`}
+                            >
+                              {deg}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Input 
+                        label="Course / Branch / Specialization" 
+                        value={data.course} 
+                        onChange={(e) => handleChange('course', e.target.value)} 
+                        placeholder="e.g. Data Analytics, Computer Science"
+                      />
+
+                      <Input 
+                        label="Year & Semester" 
+                        value={data.yearSem} 
+                        onChange={(e) => handleChange('yearSem', e.target.value)} 
+                        placeholder="e.g. 3, 6th semester"
+                      />
+
+                      <Input 
+                        label="CGPA" 
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="10"
+                        value={data.cgpa} 
+                        onChange={(e) => handleChange('cgpa', e.target.value)} 
+                        placeholder="e.g. 7.5"
+                      />
+
+                      <Input 
+                        label="Active / Standing Backlogs" 
+                        type="number"
+                        min="0"
+                        value={data.backlogs !== undefined ? data.backlogs : "0"} 
+                        onChange={(e) => handleChange('backlogs', e.target.value)} 
+                        placeholder="e.g. 0"
+                      />
+
+                      <Input 
+                        label="12th Marks (%)" 
+                        value={data.marks12th} 
+                        onChange={(e) => handleChange('marks12th', e.target.value)} 
+                        placeholder="e.g. 85%"
+                      />
+
+                      <Input 
+                        label="10th Marks (%)" 
+                        value={data.marks10th} 
+                        onChange={(e) => handleChange('marks10th', e.target.value)} 
+                        placeholder="e.g. 85%"
+                      />
+                   </div>
+
+                   <div className="pt-2 flex justify-end">
+                     <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
+                       <Save size={16} /> Save Changes
+                     </Button>
+                   </div>
                  </div>
                ) : (
-                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">College</p>
-                      <p className="text-sm font-semibold">{data.college}</p>
+                      <p className="text-sm font-semibold text-gray-900">{data.college}</p>
                     </div>
+
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Course</p>
-                      <p className="text-sm font-semibold">{data.course}</p>
+                      <p className="text-xs text-gray-500 mb-1">Degree / Program</p>
+                      <span className="inline-block text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-md">
+                        {data.degree || "B.Tech"}
+                      </span>
                     </div>
+
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Course / Branch</p>
+                      <p className="text-sm font-semibold text-gray-900">{data.course}</p>
+                    </div>
+
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Current Year / Sem</p>
-                      <p className="text-sm font-semibold">{data.yearSem}</p>
+                      <p className="text-sm font-semibold text-gray-900">{data.yearSem}</p>
                     </div>
+
                     <div>
                       <p className="text-xs text-gray-500 mb-1">CGPA</p>
-                      <div className="inline-flex items-center justify-center bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-lg text-lg">
+                      <div className="inline-flex items-center justify-center bg-indigo-50 text-indigo-700 font-extrabold px-3 py-1 rounded-lg text-lg border border-indigo-100">
                         {data.cgpa}
                       </div>
                     </div>
+
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Standing Backlogs</p>
+                      <span className={`inline-flex items-center justify-center font-bold px-3 py-1 rounded-lg text-sm border ${
+                        parseInt(data.backlogs || 0) === 0 
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}>
+                        {data.backlogs !== undefined ? data.backlogs : "0"}
+                      </span>
+                    </div>
+
                     <div>
                       <p className="text-xs text-gray-500 mb-1">12th Marks</p>
-                      <p className="text-sm font-semibold">{data.marks12th}</p>
+                      <p className="text-sm font-semibold text-gray-900">{data.marks12th}</p>
                     </div>
+
                     <div>
                       <p className="text-xs text-gray-500 mb-1">10th Marks</p>
-                      <p className="text-sm font-semibold">{data.marks10th}</p>
+                      <p className="text-sm font-semibold text-gray-900">{data.marks10th}</p>
                     </div>
                  </div>
                )}
@@ -359,16 +664,20 @@ export default function StudentProfile() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {data.skills.map((skill, idx) => (
-                    <span key={idx} className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 group">
-                      {skill}
-                      {isEditing && (
-                        <button onClick={() => removeSkill(skill)} className="text-indigo-400 hover:text-red-500 focus:outline-none">
-                           <XCircle size={14} />
-                        </button>
-                      )}
-                    </span>
-                  ))}
+                  {data.skills && data.skills.length > 0 ? (
+                    data.skills.map((skill, idx) => (
+                      <span key={idx} className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 group">
+                        {skill}
+                        {isEditing && (
+                          <button onClick={() => removeSkill(skill)} className="text-indigo-400 hover:text-red-500 focus:outline-none">
+                             <XCircle size={14} />
+                          </button>
+                        )}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-400 italic">No skills added yet.</p>
+                  )}
                 </div>
                 {isEditing && (
                   <form onSubmit={addSkill} className="flex gap-2">
@@ -384,44 +693,60 @@ export default function StudentProfile() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg">Projects</CardTitle>
-              {isEditing && <Button variant="ghost" size="sm" className="text-indigo-600"><Plus size={16} className="mr-1"/> Add Project</Button>}
+              {isEditing && (
+                <Button onClick={addProject} type="button" variant="ghost" size="sm" className="text-indigo-600">
+                  <Plus size={16} className="mr-1"/> Add Project
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
                <div className="space-y-4 mt-2">
-                  {data.projects.map((proj) => (
-                    <div key={proj.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50">
-                       {isEditing ? (
-                         <div className="space-y-3">
-                           <Input label="Project Title" value={proj.title} onChange={(e) => handleArrayChange('projects', proj.id, 'title', e.target.value)} />
-                           <div>
-                             <label className="text-sm font-medium text-gray-700 mb-1 block">Description</label>
-                             <textarea 
-                               className="w-full text-sm p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" 
-                               rows={2} 
-                               value={proj.desc} 
-                               onChange={(e) => handleArrayChange('projects', proj.id, 'desc', e.target.value)}
-                             />
+                  {data.projects && data.projects.length > 0 ? (
+                    data.projects.map((proj) => (
+                      <div key={proj.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50 relative group">
+                         {isEditing ? (
+                           <div className="space-y-3">
+                             <div className="flex justify-between items-center">
+                               <span className="text-xs font-bold text-gray-500 uppercase">Project #{proj.id}</span>
+                               <Button type="button" size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2" onClick={() => removeProject(proj.id)}>
+                                 <Trash2 size={14} className="mr-1"/> Delete
+                               </Button>
+                             </div>
+                             <Input label="Project Title" value={proj.title} onChange={(e) => handleArrayChange('projects', proj.id, 'title', e.target.value)} />
+                             <div>
+                               <label className="text-sm font-medium text-gray-700 mb-1 block">Description</label>
+                               <textarea 
+                                 className="w-full text-sm p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" 
+                                 rows={2} 
+                                 value={proj.desc} 
+                                 onChange={(e) => handleArrayChange('projects', proj.id, 'desc', e.target.value)}
+                               />
+                             </div>
+                             <div className="grid grid-cols-2 gap-3">
+                                <Input label="Technologies Used" value={proj.tech} onChange={(e) => handleArrayChange('projects', proj.id, 'tech', e.target.value)} />
+                                <Input label="Link" value={proj.link} onChange={(e) => handleArrayChange('projects', proj.id, 'link', e.target.value)} />
+                             </div>
                            </div>
-                           <div className="grid grid-cols-2 gap-3">
-                              <Input label="Technologies Used" value={proj.tech} onChange={(e) => handleArrayChange('projects', proj.id, 'tech', e.target.value)} />
-                              <Input label="Link" value={proj.link} onChange={(e) => handleArrayChange('projects', proj.id, 'link', e.target.value)} />
-                           </div>
-                         </div>
-                       ) : (
-                         <>
-                           <div className="flex justify-between items-start mb-1">
-                             <h4 className="font-semibold text-gray-900">{proj.title}</h4>
-                             {proj.link && <a href={`https://${proj.link}`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline text-sm flex items-center gap-1"><ExternalLink size={14}/> Repo</a>}
-                           </div>
-                           <p className="text-sm text-gray-600 mb-3">{proj.desc}</p>
-                           <div className="flex items-center gap-2 mt-auto">
-                              <span className="text-xs font-semibold text-gray-500">Tech:</span>
-                              <p className="text-xs bg-gray-200 px-2 py-0.5 rounded text-gray-700">{proj.tech}</p>
-                           </div>
-                         </>
-                       )}
-                    </div>
-                  ))}
+                         ) : (
+                           <>
+                             <div className="flex justify-between items-start mb-1">
+                               <h4 className="font-semibold text-gray-900">{proj.title}</h4>
+                               {proj.link && <a href={`https://${proj.link}`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline text-sm flex items-center gap-1"><ExternalLink size={14}/> Repo</a>}
+                             </div>
+                             <p className="text-sm text-gray-600 mb-3">{proj.desc || "No description provided."}</p>
+                             {proj.tech && (
+                               <div className="flex items-center gap-2 mt-auto">
+                                  <span className="text-xs font-semibold text-gray-500">Tech:</span>
+                                  <p className="text-xs bg-gray-200 px-2 py-0.5 rounded text-gray-700">{proj.tech}</p>
+                               </div>
+                             )}
+                           </>
+                         )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-400 italic py-2">No projects added yet.</p>
+                  )}
                </div>
             </CardContent>
           </Card>
@@ -430,43 +755,57 @@ export default function StudentProfile() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg">Experience & Internships</CardTitle>
-              {isEditing && <Button variant="ghost" size="sm" className="text-indigo-600"><Plus size={16} className="mr-1"/> Add Exp</Button>}
+              {isEditing && (
+                <Button onClick={addExperience} type="button" variant="ghost" size="sm" className="text-indigo-600">
+                  <Plus size={16} className="mr-1"/> Add Exp
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
                <div className="space-y-4 mt-2">
-                  {data.experience.map((exp) => (
-                    <div key={exp.id} className="relative pl-6 py-2 border-l-2 border-indigo-100">
-                       <div className="absolute w-3 h-3 bg-indigo-500 rounded-full -left-[7px] top-4 border-2 border-white"></div>
-                       {isEditing ? (
-                         <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100 ml-2">
-                           <Input label="Role" value={exp.role} onChange={(e) => handleArrayChange('experience', exp.id, 'role', e.target.value)} />
-                           <div className="grid grid-cols-2 gap-3">
-                              <Input label="Company Name" value={exp.company} onChange={(e) => handleArrayChange('experience', exp.id, 'company', e.target.value)} />
-                              <Input label="Duration" value={exp.duration} onChange={(e) => handleArrayChange('experience', exp.id, 'duration', e.target.value)} />
+                  {data.experience && data.experience.length > 0 ? (
+                    data.experience.map((exp) => (
+                      <div key={exp.id} className="relative pl-6 py-2 border-l-2 border-indigo-100">
+                         <div className="absolute w-3 h-3 bg-indigo-500 rounded-full -left-[7px] top-4 border-2 border-white"></div>
+                         {isEditing ? (
+                           <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100 ml-2">
+                             <div className="flex justify-between items-center">
+                               <span className="text-xs font-bold text-gray-500 uppercase">Experience #{exp.id}</span>
+                               <Button type="button" size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2" onClick={() => removeExperience(exp.id)}>
+                                 <Trash2 size={14} className="mr-1"/> Delete
+                               </Button>
+                             </div>
+                             <Input label="Role" value={exp.role} onChange={(e) => handleArrayChange('experience', exp.id, 'role', e.target.value)} />
+                             <div className="grid grid-cols-2 gap-3">
+                                <Input label="Company Name" value={exp.company} onChange={(e) => handleArrayChange('experience', exp.id, 'company', e.target.value)} />
+                                <Input label="Duration" value={exp.duration} onChange={(e) => handleArrayChange('experience', exp.id, 'duration', e.target.value)} />
+                             </div>
+                             <div>
+                               <label className="text-sm font-medium text-gray-700 mb-1 block">Description</label>
+                               <textarea 
+                                 className="w-full text-sm p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" 
+                                 rows={2} 
+                                 value={exp.desc} 
+                                 onChange={(e) => handleArrayChange('experience', exp.id, 'desc', e.target.value)}
+                               />
+                             </div>
                            </div>
-                           <div>
-                             <label className="text-sm font-medium text-gray-700 mb-1 block">Description</label>
-                             <textarea 
-                               className="w-full text-sm p-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none" 
-                               rows={2} 
-                               value={exp.desc} 
-                               onChange={(e) => handleArrayChange('experience', exp.id, 'desc', e.target.value)}
-                             />
+                         ) : (
+                           <div className="ml-2">
+                             <h4 className="font-semibold text-gray-900">{exp.role}</h4>
+                             <div className="flex items-center text-sm text-gray-500 mb-2 gap-2">
+                               <span className="font-medium text-indigo-600">{exp.company || "Company"}</span>
+                               <span>•</span>
+                               <span>{exp.duration || "Duration"}</span>
+                             </div>
+                             <p className="text-sm text-gray-600">{exp.desc || "No description provided."}</p>
                            </div>
-                         </div>
-                       ) : (
-                         <div className="ml-2">
-                           <h4 className="font-semibold text-gray-900">{exp.role}</h4>
-                           <div className="flex items-center text-sm text-gray-500 mb-2 gap-2">
-                             <span className="font-medium text-indigo-600">{exp.company}</span>
-                             <span>•</span>
-                             <span>{exp.duration}</span>
-                           </div>
-                           <p className="text-sm text-gray-600">{exp.desc}</p>
-                         </div>
-                       )}
-                    </div>
-                  ))}
+                         )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-400 italic py-2">No experience added yet.</p>
+                  )}
                </div>
             </CardContent>
           </Card>
@@ -475,31 +814,47 @@ export default function StudentProfile() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg flex items-center gap-2"><Award size={18} className="text-indigo-500"/> Certifications</CardTitle>
-              {isEditing && <Button variant="ghost" size="sm" className="text-indigo-600"><Plus size={16} className="mr-1"/> Add Cert</Button>}
+              {isEditing && (
+                <Button onClick={addCertification} type="button" variant="ghost" size="sm" className="text-indigo-600">
+                  <Plus size={16} className="mr-1"/> Add Cert
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                  {data.certifications.map((cert) => (
-                    <div key={cert.id} className="flex flex-col p-4 rounded-xl border border-gray-100 bg-gray-50">
-                       {isEditing ? (
-                         <div className="space-y-3">
-                           <Input label="Course Name" value={cert.course} onChange={(e) => handleArrayChange('certifications', cert.id, 'course', e.target.value)} />
-                           <Input label="Platform" value={cert.platform} onChange={(e) => handleArrayChange('certifications', cert.id, 'platform', e.target.value)} />
-                           <Input label="Link" value={cert.link} onChange={(e) => handleArrayChange('certifications', cert.id, 'link', e.target.value)} />
-                         </div>
-                       ) : (
-                         <>
-                           <h4 className="font-semibold text-gray-900 text-sm mb-1">{cert.course}</h4>
-                           <p className="text-xs text-gray-500 mb-3">{cert.platform}</p>
-                           {cert.link && (
-                             <a href={`https://${cert.link}`} target="_blank" rel="noreferrer" className="text-xs font-medium text-indigo-600 hover:underline mt-auto flex items-center gap-1 group">
-                               Verify Credential <CheckCircle2 size={12} className="group-hover:text-indigo-800"/>
-                             </a>
-                           )}
-                         </>
-                       )}
+                  {data.certifications && data.certifications.length > 0 ? (
+                    data.certifications.map((cert) => (
+                      <div key={cert.id} className="flex flex-col p-4 rounded-xl border border-gray-100 bg-gray-50">
+                         {isEditing ? (
+                           <div className="space-y-3">
+                             <div className="flex justify-between items-center">
+                               <span className="text-xs font-bold text-gray-500 uppercase">Cert #{cert.id}</span>
+                               <Button type="button" size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2" onClick={() => removeCertification(cert.id)}>
+                                 <Trash2 size={14} className="mr-1"/> Delete
+                               </Button>
+                             </div>
+                             <Input label="Course Name" value={cert.course} onChange={(e) => handleArrayChange('certifications', cert.id, 'course', e.target.value)} />
+                             <Input label="Platform" value={cert.platform} onChange={(e) => handleArrayChange('certifications', cert.id, 'platform', e.target.value)} />
+                             <Input label="Link" value={cert.link} onChange={(e) => handleArrayChange('certifications', cert.id, 'link', e.target.value)} />
+                           </div>
+                         ) : (
+                           <>
+                             <h4 className="font-semibold text-gray-900 text-sm mb-1">{cert.course}</h4>
+                             <p className="text-xs text-gray-500 mb-3">{cert.platform}</p>
+                             {cert.link && (
+                               <a href={`https://${cert.link}`} target="_blank" rel="noreferrer" className="text-xs font-medium text-indigo-600 hover:underline mt-auto flex items-center gap-1 group">
+                                 Verify Credential <CheckCircle2 size={12} className="group-hover:text-indigo-800"/>
+                               </a>
+                             )}
+                           </>
+                         )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2">
+                      <p className="text-sm text-gray-400 italic py-2">No certifications added yet.</p>
                     </div>
-                  ))}
+                  )}
                </div>
             </CardContent>
           </Card>

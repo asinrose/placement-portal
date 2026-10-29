@@ -54,8 +54,14 @@ export default function PostJob() {
     }
   }, [jobId, jobs, isEditing]);
 
+  const todayDate = new Date().toLocaleDateString('en-CA');
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (formData.deadline && formData.deadline < todayDate) {
+      alert("Deadline cannot be in the past. Please select today or a future date.");
+      return;
+    }
     setIsSubmitting(true);
     
     // Convert checkbox states into the string array expected by the context schema
@@ -96,7 +102,7 @@ export default function PostJob() {
         recruiterPhone: formData.recruiterPhone,
         visibility: formData.visibility,
         autoCheckEligibility: formData.autoCheckEligibility,
-        postedBy: user?.email || "alumni@example.com"
+        postedBy: user?.email || ""
       };
 
       if (isEditing) {
@@ -294,7 +300,7 @@ export default function PostJob() {
                     <Input label="Custom Stage (Optional)" placeholder="e.g. Group Discussion" value={formData.customSelection} onChange={e => setFormData({...formData, customSelection: e.target.value})} />
                   </div>
                   <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-                    <Input type="date" label="Deadline" required value={formData.deadline} onChange={e => setFormData({...formData, deadline: e.target.value})} />
+                    <Input type="date" label="Deadline" min={todayDate} required value={formData.deadline} onChange={e => setFormData({...formData, deadline: e.target.value})} />
                     <Input type="number" label="Vacancies" required placeholder="Number" value={formData.vacancies} onChange={e => setFormData({...formData, vacancies: e.target.value})} />
                   </div>
                </CardContent>

@@ -9,7 +9,7 @@ import { Button } from "../../components/Button";
 export default function StudentSavedJobs() {
   const { jobs, applyForJob, toggleSaveJob } = useJobs();
   const { user } = useAuth();
-  const currentUserEmail = user?.email || "student@example.com";
+  const currentUserEmail = user?.email || "";
   
   const [selectedJob, setSelectedJob] = useState(null);
 
@@ -22,6 +22,30 @@ export default function StudentSavedJobs() {
        return;
     }
     applyForJob(job.id, currentUserEmail);
+
+    const profileKey = `studentProfileData_${currentUserEmail}`;
+    const studentProfile = JSON.parse(localStorage.getItem(profileKey) || 'null') || JSON.parse(localStorage.getItem('studentProfileData') || 'null');
+    const resumeToSave = studentProfile?.resumeFile || (studentProfile?.fullName ? `${studentProfile.fullName}_Resume.pdf` : "Student_Resume.pdf");
+    const resumeDataToSave = studentProfile?.resumeData || null;
+
+    localStorage.setItem(`resume_job_${job.id}_${currentUserEmail}`, resumeToSave);
+    if (resumeDataToSave) {
+      localStorage.setItem(`resume_data_job_${job.id}_${currentUserEmail}`, resumeDataToSave);
+    }
+
+    const applicationRecord = {
+      jobId: job.id,
+      jobRole: job.role,
+      company: job.company,
+      studentEmail: currentUserEmail,
+      resumeFile: resumeToSave,
+      resumeData: resumeDataToSave,
+      appliedDate: new Date().toISOString().split('T')[0],
+      appliedAt: new Date().toISOString(),
+      studentProfileSnapshot: studentProfile
+    };
+    localStorage.setItem(`application_data_${job.id}_${currentUserEmail}`, JSON.stringify(applicationRecord));
+
     setSelectedJob(null);
   };
 

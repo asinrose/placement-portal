@@ -4,18 +4,47 @@ import { Link, Briefcase, ExternalLink, Activity, Plus, TrendingUp } from "lucid
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 
+import { useAuth } from "../../context/AuthContext";
+
 export default function JobReferrals() {
-  const [referrals, setReferrals] = useState([]);
+  const { user } = useAuth();
+  const [referrals, setReferrals] = useState(() => {
+    const saved = localStorage.getItem('alumni_referrals');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('alumni_referrals', JSON.stringify(referrals));
+  }, [referrals]);
+
+  // Filter referrals for current alumni or show all
+  const myReferrals = referrals.filter(r => !r.postedBy || r.postedBy === user?.email);
+
+  const totalClicks = myReferrals.reduce((acc, ref) => acc + (ref.clicks || 0), 0);
+  const totalApplicants = myReferrals.reduce((acc, ref) => acc + (ref.applicants || 0), 0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newReferral, setNewReferral] = useState({ company: "", role: "", url: "" });
+  const [newReferral, setNewReferral] = useState({ company: "", role: "", url: "", description: "" });
 
   const handlePostReferral = (e) => {
     e.preventDefault();
     if (!newReferral.company || !newReferral.role || !newReferral.url) return;
-    setReferrals([{ id: Date.now(), ...newReferral, date: "Just now", clicks: 0, applicants: 0 }, ...referrals]);
+    const postItem = {
+      id: Date.now(),
+      company: newReferral.company,
+      role: newReferral.role,
+      url: newReferral.url.startsWith('http') ? newReferral.url : `https://${newReferral.url}`,
+      description: newReferral.description || "",
+      postedBy: user?.email || "alumni@example.com",
+      alumniName: user?.name || "Alumni Mentor",
+      date: new Date().toISOString().split('T')[0],
+      clicks: 0,
+      applicants: 0,
+      applicantEmails: []
+    };
+    setReferrals(prev => [postItem, ...prev]);
     setIsModalOpen(false);
-    setNewReferral({ company: "", role: "", url: "" });
+    setNewReferral({ company: "", role: "", url: "", description: "" });
   };
 
   return (
@@ -33,7 +62,7 @@ export default function JobReferrals() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
         {/* Active Referrals Feed */}
         <div className="lg:col-span-2 space-y-6">
-           {referrals.map((ref) => (
+           {myReferrals.map((ref) => (
              <Card key={ref.id} className="border-gray-200 shadow-sm hover:shadow transition-shadow bg-white overflow-hidden">
                 <CardContent className="p-0">
                    <div className="p-6">
@@ -45,10 +74,18 @@ export default function JobReferrals() {
                             <div>
                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-indigo-600 transition-colors cursor-pointer">{ref.role}</h3>
                                <p className="text-sm font-medium text-gray-500">{ref.company} • Posted {ref.date}</p>
+                               {ref.description && (
+                                 <p className="text-xs text-gray-600 mt-2 line-clamp-2">{ref.description}</p>
+                               )}
                             </div>
                          </div>
-                         <a href="#" className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors">
-                            Apply <ExternalLink className="w-3.5 h-3.5"/>
+                         <a 
+                           href={ref.url} 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
+                         >
+                            View Link <ExternalLink className="w-3.5 h-3.5"/>
                          </a>
                       </div>
                       <div className="mt-6 flex flex-wrap gap-4">
@@ -83,11 +120,11 @@ export default function JobReferrals() {
              <CardContent className="p-6 space-y-6">
                 <div>
                   <p className="text-sm text-gray-500 font-medium">Total Students Placed via Referrals</p>
-                  <p className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-400 mt-1">0</p>
+                  <p className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-400 mt-1">{totalApplicants}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 font-medium">Total Link Clicks</p>
-                  <p className="text-3xl font-extrabold text-gray-900 mt-1">0</p>
+                  <p className="text-3xl font-extrabold text-gray-900 mt-1">{totalClicks}</p>
                 </div>
              </CardContent>
            </Card>

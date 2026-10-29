@@ -4,7 +4,18 @@ import { Clock, Calendar, CheckCircle, Video, Plus, User, Trash2 } from "lucide-
 import { Button } from "../../components/Button";
 
 export default function MockInterviews() {
-  const [slots, setSlots] = useState([]);
+  const [slots, setSlots] = useState(() => {
+    try {
+      const saved = localStorage.getItem('alumni_mock_slots');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('alumni_mock_slots', JSON.stringify(slots));
+  }, [slots]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newSlot, setNewSlot] = useState({ date: "", time: "", duration: "45 mins", topic: "" });
@@ -132,7 +143,7 @@ export default function MockInterviews() {
                   <div className="grid grid-cols-2 gap-4">
                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                        <input type="date" required value={newSlot.date} onChange={e => setNewSlot({...newSlot, date: e.target.value})} className="w-full h-10 px-3 rounded-md border border-gray-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        <input type="date" min={new Date().toLocaleDateString('en-CA')} required value={newSlot.date} onChange={e => setNewSlot({...newSlot, date: e.target.value})} className="w-full h-10 px-3 rounded-md border border-gray-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                      </div>
                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>

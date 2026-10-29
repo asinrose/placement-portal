@@ -17,7 +17,7 @@ export default function ManageJobs({ rolePrefix }) {
   const [deleteId, setDeleteId] = useState(null);
 
   // Filter jobs explicitly to only those posted by the current user
-  const userEmail = user?.email || "alumni@example.com"; // Mock fallback
+  const userEmail = user?.email || "";
   const myJobs = jobs.filter(job => job.postedBy === userEmail);
 
   // Quick stats

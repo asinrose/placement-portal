@@ -23,11 +23,31 @@ export default function Auth() {
   // --- LOGIN STATE & LOGIC ---
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(() => {
+    return localStorage.getItem("pp_remember_me") === "true";
+  });
   const [loginError, setLoginError] = useState("");
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Load remembered credentials on initial mount
+  useEffect(() => {
+    const isRemembered = localStorage.getItem("pp_remember_me") === "true";
+    if (isRemembered) {
+      try {
+        const savedAuth = JSON.parse(localStorage.getItem("pp_remembered_auth") || "{}");
+        if (savedAuth.email) {
+          setLoginEmail(savedAuth.email);
+          // Check if password was updated in active users
+          const activeUsers = JSON.parse(localStorage.getItem("nexus_active_users") || "[]");
+          const storedUser = activeUsers.find(u => u.email === savedAuth.email || u.registerNumber === savedAuth.email);
+          setLoginPassword(storedUser?.password || savedAuth.password || "");
+        }
+      } catch (e) { }
+    }
+  }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -45,10 +65,13 @@ export default function Auth() {
       let user = activeUsers.find(u => (u.email === loginEmail || u.registerNumber === loginEmail) && u.password === loginPassword);
 
       if (!user) {
-        if (loginEmail === "tpo@demo.com" && loginPassword === "demo123") {
-          user = { id: 2, name: "Bob Officer", email: loginEmail, role: "PLACEMENT_OFFICER" };
-        } else if (loginEmail === "admin@demo.com" && loginPassword === "demo123") {
-          user = { id: 4, name: "System Admin", email: loginEmail, role: "ADMIN" };
+        const storedUser = activeUsers.find(u => u.email === loginEmail || u.registerNumber === loginEmail);
+        if (!storedUser) {
+          if (loginEmail === "tpo@demo.com" && (loginPassword === "mypassword123" || loginPassword === "demo123")) {
+            user = { id: 2, name: "Bob Officer", email: loginEmail, role: "PLACEMENT_OFFICER", password: loginPassword };
+          } else if (loginEmail === "admin@demo.com" && loginPassword === "demo123") {
+            user = { id: 4, name: "System Admin", email: loginEmail, role: "ADMIN", password: loginPassword };
+          }
         }
       }
 
@@ -64,6 +87,15 @@ export default function Auth() {
           setRequirePasswordChange(user);
           setIsLoginLoading(false);
           return;
+        }
+
+        // Save or clear Remember Me
+        if (rememberMe) {
+          localStorage.setItem("pp_remember_me", "true");
+          localStorage.setItem("pp_remembered_auth", JSON.stringify({ email: loginEmail, password: loginPassword }));
+        } else {
+          localStorage.removeItem("pp_remember_me");
+          localStorage.removeItem("pp_remembered_auth");
         }
 
         login(user);
@@ -115,7 +147,22 @@ export default function Auth() {
 
   const handleDemoClick = (demoEmail) => {
     setLoginEmail(demoEmail);
-    setLoginPassword("demo123");
+    const activeUsers = JSON.parse(localStorage.getItem("nexus_active_users") || "[]");
+    const storedUser = activeUsers.find(u => u.email === demoEmail);
+
+    const isRemembered = localStorage.getItem("pp_remember_me") === "true";
+    const remembered = JSON.parse(localStorage.getItem("pp_remembered_auth") || "{}");
+
+    // Always prioritize the latest saved password from active users
+    if (storedUser && storedUser.password) {
+      setLoginPassword(storedUser.password);
+    } else if (isRemembered && remembered.email === demoEmail && remembered.password) {
+      setLoginPassword(remembered.password);
+    } else if (demoEmail === "tpo@demo.com") {
+      setLoginPassword("mypassword123");
+    } else {
+      setLoginPassword("demo123");
+    }
   };
 
   // --- REGISTER STATE & LOGIC ---
@@ -304,8 +351,13 @@ export default function Auth() {
                   />
 
                   <div className="flex items-center justify-between text-xs text-gray-500 pt-1 pb-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" className="mr-2 rounded text-purple-500 focus:ring-purple-500 border-gray-300" />
+                    <label className="flex items-center cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="mr-2 rounded text-purple-500 focus:ring-purple-500 border-gray-300"
+                      />
                       Remember me
                     </label>
                     <a href="#" className="hover:text-purple-600 transition-colors">Forgot your password?</a>
